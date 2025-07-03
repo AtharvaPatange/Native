@@ -29,6 +29,10 @@ export default function HotelOrientEliteScreen() {
   const [payVendor, setPayVendor] = useState('');
   const [payAmount, setPayAmount] = useState('');
   const [payStatus, setPayStatus] = useState('pending');
+  // Food Bill form
+  const [foodBillAmount, setFoodBillAmount] = useState('');
+  const [foodBillPaymentMode, setFoodBillPaymentMode] = useState('cash');
+  const [foodBillStatus, setFoodBillStatus] = useState('pending');
   const branchId = 'orientElite';
 
   // Handlers
@@ -117,6 +121,24 @@ export default function HotelOrientEliteScreen() {
       Alert.alert('Success', 'Vendor payment added!');
     } catch {
       Alert.alert('Error', 'Failed to add vendor payment.');
+    }
+  };
+  const handleAddFoodBill = async () => {
+    try {
+      await addDoc(collection(db, 'foodBills'), {
+        amount: Number(foodBillAmount),
+        paymentMode: foodBillPaymentMode,
+        status: foodBillStatus,
+        branchId,
+        createdAt: new Date(),
+        createdBy: user?.email || 'guest',
+      });
+      setFoodBillAmount('');
+      setFoodBillPaymentMode('cash');
+      setFoodBillStatus('pending');
+      Alert.alert('Success', 'Food bill entry added!');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to add food bill entry.');
     }
   };
 
@@ -219,13 +241,44 @@ export default function HotelOrientEliteScreen() {
                   selectedValue={payStatus}
                   onValueChange={setPayStatus}
                   style={styles.pickerNew}
-                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
-                >
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
                   <Picker.Item label="Pending" value="pending" />
                   <Picker.Item label="Done" value="done" />
                 </Picker>
               </View>
               <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Payment</Button>
+              {/* 6. Food Bill */}
+              <Text style={styles.sectionTitleNew}>Food Bill</Text>
+              <TextInput
+                placeholder="Amount"
+                value={foodBillAmount}
+                onChangeText={setFoodBillAmount}
+                keyboardType="numeric"
+                style={styles.inputNew}
+                placeholderTextColor="#888"
+              />
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={foodBillPaymentMode}
+                  onValueChange={setFoodBillPaymentMode}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
+                  <Picker.Item label="Cash" value="cash" />
+                  <Picker.Item label="Online" value="online" />
+                  <Picker.Item label="Card" value="card" />
+                </Picker>
+              </View>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={foodBillStatus}
+                  onValueChange={setFoodBillStatus}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
+              <Button mode="contained" onPress={handleAddFoodBill} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Food Bill</Button>
             </View>
           </ScrollView>
         </View>

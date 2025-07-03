@@ -1,9 +1,10 @@
 import { useAuth } from '@/components/AuthContext';
 import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Button, Dimensions, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 
 interface HotelDashboardProps {
@@ -74,6 +75,7 @@ const summaryStyles = StyleSheet.create({
 
 export default function HotelDashboard({ branchId, branchName }: HotelDashboardProps) {
   const { user, userRole } = useAuth();
+  const router = useRouter();
   // 1. Sales
   const [sale, setSale] = useState({ cash: '', online: '', pending: '' });
   const [salesList, setSalesList] = useState<Sale[]>([]);
@@ -287,11 +289,11 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               <Text style={[summaryStyles.value, { color: '#e53935' }]}>₹{todayExpenses}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
             </View>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="account-group" size={32} color="#43a047" />
-              <Text style={[summaryStyles.value, { color: '#43a047' }]}>{vendorCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Vendors</Text>
-            </View>
+            <TouchableOpacity style={summaryStyles.card} onPress={() => router.push('/hotel-orient-elite-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color="#1976d2" />
+              <Text style={summaryStyles.value}>{vendorCount}</Text>
+              <Text style={summaryStyles.label}>Vendors</Text>
+            </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="wrench" size={32} color="#fbc02d" />
               <Text style={[summaryStyles.value, { color: '#fbc02d' }]}>{openMaintCount}</Text>

@@ -25,6 +25,10 @@ export default function HotelOrientEliteScreen() {
   // Maintenance form
   const [maintDesc, setMaintDesc] = useState('');
   const [maintRoom, setMaintRoom] = useState('');
+  const [maintVendorName, setMaintVendorName] = useState('');
+  const [maintVendorPhone, setMaintVendorPhone] = useState('');
+  const [maintPaymentMode, setMaintPaymentMode] = useState('cash');
+  const [maintStatus, setMaintStatus] = useState('pending');
   // Payment form
   const [payVendor, setPayVendor] = useState('');
   const [payAmount, setPayAmount] = useState('');
@@ -94,12 +98,20 @@ export default function HotelOrientEliteScreen() {
       await addDoc(collection(db, 'maintenanceLogs'), {
         desc: maintDesc,
         room: maintRoom,
+        vendorName: maintVendorName,
+        vendorPhone: maintVendorPhone,
+        paymentMode: maintPaymentMode,
+        status: maintStatus,
         branchId,
         createdAt: new Date(),
         createdBy: user?.email || 'guest',
       });
       setMaintDesc('');
       setMaintRoom('');
+      setMaintVendorName('');
+      setMaintVendorPhone('');
+      setMaintPaymentMode('cash');
+      setMaintStatus('pending');
       Alert.alert('Success', 'Maintenance log added!');
     } catch {
       Alert.alert('Error', 'Failed to add maintenance log.');
@@ -231,6 +243,29 @@ export default function HotelOrientEliteScreen() {
               <Text style={styles.sectionTitleNew}>Maintenance</Text>
               <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.inputNew} placeholderTextColor="#888" />
               <TextInput placeholder="Room Number" value={maintRoom} onChangeText={setMaintRoom} style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Vendor Name" value={maintVendorName} onChangeText={setMaintVendorName} style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Phone Number" value={maintVendorPhone} onChangeText={setMaintVendorPhone} keyboardType="phone-pad" style={styles.inputNew} placeholderTextColor="#888" />
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={maintPaymentMode}
+                  onValueChange={setMaintPaymentMode}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
+                  <Picker.Item label="Cash" value="cash" />
+                  <Picker.Item label="Online" value="online" />
+                  <Picker.Item label="Card" value="card" />
+                </Picker>
+              </View>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={maintStatus}
+                  onValueChange={setMaintStatus}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
               <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Maintenance</Button>
               {/* 5. Vendor Payment */}
               <Text style={styles.sectionTitleNew}>Vendor Payment</Text>

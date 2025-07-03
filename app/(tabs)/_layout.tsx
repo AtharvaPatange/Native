@@ -30,21 +30,21 @@ export default function TabLayout() {
         name="hotel-orient-elite"
         options={{
           title: 'Hotel Orient Elite',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="house.fill" color={focused ? '#6CA8F7' : '#888'} />,
         }}
       />
       <Tabs.Screen
         name="hotel-ojas"
         options={{
           title: 'Hotel Ojas',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="star.fill" color={focused ? '#1976d2' : '#888'} />,
         }}
       />
       <Tabs.Screen
         name="catena-cafe"
         options={{
           title: 'Catena Cafe',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="cup.and.saucer.fill" color={color} />,
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="cup.and.saucer.fill" color={focused ? '#43a047' : '#888'} />,
         }}
       />
     </Tabs>

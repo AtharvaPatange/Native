@@ -1,8 +1,10 @@
 import { useAuth } from '@/components/AuthContext';
 import { db } from '@/constants/firebaseConfig';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { addDoc, collection, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Button, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, Dimensions, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
 
 interface HotelDashboardProps {
   branchId: string;
@@ -52,6 +54,24 @@ interface Payment {
   createdBy: string;
 }
 
+const summaryStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '47%',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  value: { fontSize: 22, fontWeight: 'bold' as 'bold', marginTop: 6, color: '#222' },
+  label: { fontSize: 13, color: '#666', marginTop: 2, textAlign: 'center' as 'center' },
+});
+
 export default function HotelDashboard({ branchId, branchName }: HotelDashboardProps) {
   const { user, userRole } = useAuth();
   // 1. Sales
@@ -69,6 +89,78 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   // 5. Vendor Payments
   const [payment, setPayment] = useState({ vendor: '', amount: '', status: 'pending' });
   const [paymentsList, setPaymentsList] = useState<Payment[]>([]);
+  // State for custom legend selection
+  const [selectedSeries, setSelectedSeries] = useState<'sales' | 'expenses' | null>(null);
+  // State for per-point tooltip
+  const [pointTooltip, setPointTooltip] = useState<{ x: number; y: number; value: number; label: string; color: string; series: string } | null>(null);
+
+  // Prepare chart data for sales and expenses (last 7 days)
+  const isOrientElite = branchId === 'orientElite';
+  let chartLabels: string[] = [];
+  let salesData: number[] = [];
+  let expensesData: number[] = [];
+  if (isOrientElite) {
+    // Group sales and expenses by day (last 7 days)
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      chartLabels.push(label);
+      // Sales sum for this day
+      const salesSum = salesList
+        .filter(s => {
+          if (!s.createdAt) return false;
+          const date = new Date(s.createdAt.seconds * 1000);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, s) => sum + (s.cash || 0) + (s.online || 0), 0);
+      salesData.push(salesSum);
+      // Expenses sum for this day
+      const expenseSum = expensesList
+        .filter(e => {
+          if (!e.createdAt) return false;
+          const date = new Date(e.createdAt.seconds * 1000);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, e) => sum + (e.cash || 0) + (e.online || 0), 0);
+      expensesData.push(expenseSum);
+    }
+  }
+
+  // Calculate summary stats for today
+  let todaySales = 0, todayExpenses = 0, vendorCount = 0, openMaintCount = 0, paidPayments = 0, pendingPayments = 0;
+  if (isOrientElite) {
+    const now = new Date();
+    todaySales = salesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds * 1000);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, s) => sum + (s.cash || 0) + (s.online || 0), 0);
+    todayExpenses = expensesList.filter(e => {
+      if (!e.createdAt) return false;
+      const d = new Date(e.createdAt.seconds * 1000);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, e) => sum + (e.cash || 0) + (e.online || 0), 0);
+    vendorCount = vendorsList.length;
+    openMaintCount = maintenanceList.filter(m => m.status?.toLowerCase() !== 'resolved').length;
+    paidPayments = paymentsList.filter(p => p.status === 'paid').length;
+    pendingPayments = paymentsList.filter(p => p.status === 'pending').length;
+  }
+
+  // Calculate totals and averages for tooltip
+  const salesTotal = salesData.reduce((a, b) => a + b, 0);
+  const salesAvg = salesData.length ? Math.round(salesTotal / salesData.length) : 0;
+  const expensesTotal = expensesData.reduce((a, b) => a + b, 0);
+  const expensesAvg = expensesData.length ? Math.round(expensesTotal / expensesData.length) : 0;
 
   useEffect(() => {
     // Sales
@@ -101,6 +193,126 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
       <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4 }}>{branchName} Dashboard</Text>
+      {isOrientElite && (
+        <>
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24 }}>
+            <View style={{ position: 'relative' }}>
+              <LineChart
+                data={{
+                  labels: chartLabels,
+                  datasets: [
+                    { data: salesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? '#1976d2' : 'rgba(25,118,210,0.3)', strokeWidth: 3, withDots: true },
+                    { data: expensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? '#e53935' : 'rgba(229,57,53,0.3)', strokeWidth: 3, withDots: true },
+                  ],
+                  legend: [],
+                }}
+                width={Dimensions.get('window').width - 48}
+                height={260}
+                yAxisLabel="₹"
+                yAxisSuffix=""
+                yLabelsOffset={8}
+                xLabelsOffset={-4}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  propsForDots: { r: '4', strokeWidth: '2', stroke: '#fff', pointerEvents: 'auto' },
+                  propsForBackgroundLines: { stroke: '#e0e0e0', strokeDasharray: '4' },
+                  propsForLabels: { fontWeight: 'bold', fontSize: 14 },
+                  style: { borderRadius: 18 },
+                  fillShadowGradient: '#000',
+                  fillShadowGradientOpacity: 0.04,
+                }}
+                bezier
+                style={{ borderRadius: 18 }}
+                fromZero
+                segments={5}
+                formatYLabel={y => `${y}`}
+                onDataPointClick={({ value, index, x, y }) => {
+                  let series = '';
+                  let color = '';
+                  if (salesData[index] === value) {
+                    series = 'Sales';
+                    color = '#1976d2';
+                  } else if (expensesData[index] === value) {
+                    series = 'Expenses';
+                    color = '#e53935';
+                  }
+                  setPointTooltip({
+                    x,
+                    y,
+                    value,
+                    label: chartLabels[index],
+                    color,
+                    series,
+                  });
+                }}
+              />
+              {/* Per-point Tooltip Box as overlay */}
+              {pointTooltip && (
+                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: '#fff', borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eee' }}>
+                  <MaterialCommunityIcons name="close" size={20} color="#222" onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? '#1976d2' : '#e53935', marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
+                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
+                  <Text style={{ fontSize: 13, color: '#888', marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
+                </View>
+              )}
+            </View>
+            {/* Custom Legend */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, gap: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#222', marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: '#222', opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: '#222', fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 32 }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#888', marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: '#888', opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: '#888', fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
+              </View>
+            </View>
+          </View>
+          {/* Section Header for Summary */}
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          {/* Summary Cards Grid */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="cash" size={32} color="#1976d2" />
+              <Text style={[summaryStyles.value, { color: '#1976d2' }]}>₹{todaySales}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="bank" size={32} color="#e53935" />
+              <Text style={[summaryStyles.value, { color: '#e53935' }]}>₹{todayExpenses}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="account-group" size={32} color="#43a047" />
+              <Text style={[summaryStyles.value, { color: '#43a047' }]}>{vendorCount}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Vendors</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="wrench" size={32} color="#fbc02d" />
+              <Text style={[summaryStyles.value, { color: '#fbc02d' }]}>{openMaintCount}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="check-circle" size={32} color="#43a047" />
+              <Text style={[summaryStyles.value, { color: '#43a047' }]}>{paidPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="clock-outline" size={32} color="#e53935" />
+              <Text style={[summaryStyles.value, { color: '#e53935' }]}>{pendingPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
+            </View>
+          </View>
+        </>
+      )}
+      {/* For other branches, keep the old UI (if needed) */}
+      {!isOrientElite && (
+        <>
       {userRole && (
         <Text style={{ alignSelf: 'center', backgroundColor: '#1976d2', color: '#fff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, fontWeight: 'bold', fontSize: 14 }}>
           Role: {userRole}
@@ -221,6 +433,8 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
           <Text key={p.id || i} style={{ fontSize: 12 }}>{p.vendor} | Amount: {p.amount} | By: {p.createdBy}</Text>
         ))}
       </View>
+        </>
+      )}
     </ScrollView>
   );
 }

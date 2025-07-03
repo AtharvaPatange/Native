@@ -207,7 +207,7 @@ export default function CatenaCafeScreen() {
       </Modal>
     </View>
   );
-}
+} 
 
 const styles = StyleSheet.create({
   appbar: {

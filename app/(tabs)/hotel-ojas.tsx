@@ -207,7 +207,7 @@ export default function HotelOjasScreen() {
       </Modal>
     </View>
   );
-}
+} 
 
 const styles = StyleSheet.create({
   appbar: {

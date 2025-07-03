@@ -6,7 +6,7 @@ import { Picker } from '@react-native-picker/picker';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, View } from 'react-native';
-import { Appbar, Button, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
 
 export default function HotelOrientEliteScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -122,13 +122,13 @@ export default function HotelOrientEliteScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={styles.appbar}>
-        <Text style={styles.title}>Hotel Orient Elite</Text>
+      <View style={[styles.appbar, { backgroundColor: '#6CA8F7' }]}>
+        <Text style={[styles.title, { color: '#222' }]}>Hotel Orient Elite</Text>
         <View style={styles.iconButtonWrapper}>
           <MaterialCommunityIcons
             name="plus-circle"
             size={36}
-            color="#1976d2"
+            color="#222"
             style={styles.iconButton}
             onPress={() => setModalVisible(true)}
           />
@@ -138,80 +138,97 @@ export default function HotelOrientEliteScreen() {
       <Modal
         visible={modalVisible}
         animationType="slide"
-        transparent={false}
+        transparent={true}
         onRequestClose={() => setModalVisible(false)}
       >
-        <ScrollView style={styles.modalScroll} contentContainerStyle={{ paddingBottom: 32 }}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Entries</Text>
-            {/* 1. Today's Total Sale */}
-            <Text style={styles.sectionTitle}>Today&apos;s Total Sale</Text>
-            <TextInput placeholder="Cash" value={saleCash} onChangeText={setSaleCash} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={saleType}
-              onValueChange={setSaleType}
-              style={styles.picker}
-            >
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-              <Picker.Item label="Bank Transfer" value="bank" />
-            </Picker>
-            <Picker
-              selectedValue={saleStatus}
-              onValueChange={setSaleStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddSale} style={styles.saveBtn}>Save Sale</Button>
-            {/* 2. Today&apos;s Total Expense */}
-            <Text style={styles.sectionTitle}>Today&apos;s Total Expense</Text>
-            <TextInput placeholder="Cash" value={expenseCash} onChangeText={setExpenseCash} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={expenseType}
-              onValueChange={setExpenseType}
-              style={styles.picker}
-            >
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-              <Picker.Item label="Bank Transfer" value="bank" />
-            </Picker>
-            <Picker
-              selectedValue={expenseStatus}
-              onValueChange={setExpenseStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddExpense} style={styles.saveBtn}>Save Expense</Button>
-            {/* 3. Vendor List */}
-            <Text style={styles.sectionTitle}>Vendor List</Text>
-            <TextInput placeholder="Vendor Name" value={vendorName} onChangeText={setVendorName} style={styles.input} />
-            <TextInput placeholder="Contact Number" value={vendorContact} onChangeText={setVendorContact} keyboardType="phone-pad" style={styles.input} />
-            <Button mode="contained" onPress={handleAddVendor} style={styles.saveBtn}>Save Vendor</Button>
-            {/* 4. Maintenance */}
-            <Text style={styles.sectionTitle}>Maintenance</Text>
-            <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.input} />
-            <TextInput placeholder="Room Number" value={maintRoom} onChangeText={setMaintRoom} style={styles.input} />
-            <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtn}>Save Maintenance</Button>
-            {/* 5. Vendor Payment */}
-            <Text style={styles.sectionTitle}>Vendor Payment</Text>
-            <TextInput placeholder="Vendor Name" value={payVendor} onChangeText={setPayVendor} style={styles.input} />
-            <TextInput placeholder="Amount" value={payAmount} onChangeText={setPayAmount} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={payStatus}
-              onValueChange={setPayStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtn}>Save Payment</Button>
-            <Appbar.Action icon="close" onPress={() => setModalVisible(false)} style={{ alignSelf: 'flex-end', marginTop: 8 }} />
-          </View>
-        </ScrollView>
+        <View style={styles.modalOverlay}>
+          <ScrollView style={styles.modalScroll} contentContainerStyle={{ paddingBottom: 32 }}>
+            <View style={styles.modalContentNew}>
+              <MaterialCommunityIcons name="close" size={28} color="#222" style={styles.closeIcon} onPress={() => setModalVisible(false)} />
+              <Text style={styles.modalTitleNew}>Add Entries</Text>
+              {/* 1. Today's Total Sale */}
+              <Text style={styles.sectionTitleNew}>Today&apos;s Total Sale</Text>
+              <TextInput placeholder="Cash" value={saleCash} onChangeText={setSaleCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={saleType}
+                  onValueChange={setSaleType}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
+                >
+                  <Picker.Item label="Online" value="online" />
+                  <Picker.Item label="Card" value="card" />
+                  <Picker.Item label="Bank Transfer" value="bank" />
+                </Picker>
+              </View>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={saleStatus}
+                  onValueChange={setSaleStatus}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
+              <Button mode="contained" onPress={handleAddSale} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Sale</Button>
+              {/* 2. Today's Total Expense */}
+              <Text style={styles.sectionTitleNew}>Today&apos;s Total Expense</Text>
+              <TextInput placeholder="Cash" value={expenseCash} onChangeText={setExpenseCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={expenseType}
+                  onValueChange={setExpenseType}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
+                >
+                  <Picker.Item label="Online" value="online" />
+                  <Picker.Item label="Card" value="card" />
+                  <Picker.Item label="Bank Transfer" value="bank" />
+                </Picker>
+              </View>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={expenseStatus}
+                  onValueChange={setExpenseStatus}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
+              <Button mode="contained" onPress={handleAddExpense} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Expense</Button>
+              {/* 3. Vendor List */}
+              <Text style={styles.sectionTitleNew}>Vendor List</Text>
+              <TextInput placeholder="Vendor Name" value={vendorName} onChangeText={setVendorName} style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Contact Number" value={vendorContact} onChangeText={setVendorContact} keyboardType="phone-pad" style={styles.inputNew} placeholderTextColor="#888" />
+              <Button mode="contained" onPress={handleAddVendor} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Vendor</Button>
+              {/* 4. Maintenance */}
+              <Text style={styles.sectionTitleNew}>Maintenance</Text>
+              <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Room Number" value={maintRoom} onChangeText={setMaintRoom} style={styles.inputNew} placeholderTextColor="#888" />
+              <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Maintenance</Button>
+              {/* 5. Vendor Payment */}
+              <Text style={styles.sectionTitleNew}>Vendor Payment</Text>
+              <TextInput placeholder="Vendor Name" value={payVendor} onChangeText={setPayVendor} style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Amount" value={payAmount} onChangeText={setPayAmount} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={payStatus}
+                  onValueChange={setPayStatus}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
+              <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Payment</Button>
+            </View>
+          </ScrollView>
+        </View>
       </Modal>
     </View>
   );
@@ -249,42 +266,104 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f6fa',
   },
-  modalContent: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContentNew: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: 18,
+    padding: 28,
     margin: 16,
-    alignItems: 'stretch',
-    elevation: 4,
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    minWidth: 320,
+    maxWidth: 420,
+    alignSelf: 'center',
+    position: 'relative',
   },
-  modalTitle: {
-    fontSize: 20,
+  closeIcon: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  modalTitleNew: {
+    fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 18,
     textAlign: 'center',
+    color: '#222',
+    letterSpacing: 0.5,
   },
-  sectionTitle: {
+  sectionTitleNew: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 18,
-    marginBottom: 6,
+    marginTop: 28,
+    marginBottom: 10,
+    color: '#222',
+    letterSpacing: 0.2,
   },
-  input: {
+  inputNew: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#6CA8F7',
+    width: 260,
+    height: 56,
+    marginBottom: 12,
+    paddingVertical: 0,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    color: '#222',
+    fontSize: 15,
+    shadowColor: '#6CA8F7',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    justifyContent: 'center',
+  },
+  pickerWrapper: {
+    borderWidth: 1,
+    borderColor: '#6CA8F7',
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
+    width: 260,
+    height: 56,
+    justifyContent: 'center',
+    shadowColor: '#6CA8F7',
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+  },
+  pickerNew: {
+    backgroundColor: '#fff',
+    color: '#222',
+    fontSize: 15,
+    height: 56,
     width: '100%',
-    marginBottom: 12,
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    textAlignVertical: 'center',
   },
-  picker: {
-    backgroundColor: '#f9f9f9',
-    marginBottom: 12,
-    borderRadius: 6,
+  saveBtnNew: {
+    marginBottom: 14,
+    backgroundColor: '#6CA8F7',
+    borderRadius: 8,
+    paddingVertical: 10,
+    minWidth: 180,
+    width: 180,
+    alignSelf: 'center',
+    elevation: 0,
   },
-  saveBtn: {
-    marginBottom: 16,
-    backgroundColor: '#1976d2',
+  saveBtnLabel: {
+    color: '#222',
+    fontWeight: 'bold',
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
 }); 

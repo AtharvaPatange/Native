@@ -3,10 +3,14 @@ import HotelDashboard from '@/components/HotelDashboard';
 import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
+
+const PRIMARY_COLOR = '#e0a86b';
+const SECONDARY_COLOR = '#e2af7a';
 
 export default function HotelOrientEliteScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -156,13 +160,19 @@ export default function HotelOrientEliteScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={[styles.appbar, { backgroundColor: '#6CA8F7' }]}>
-        <Text style={[styles.title, { color: '#222' }]}>Hotel Orient Elite</Text>
+      <View style={[styles.appbar, { backgroundColor: undefined }]}>
+        <LinearGradient
+          colors={['#e0a86b', '#e2af7a']}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <Text style={[styles.title, { color: '#111' }]}>Hotel Orient Elite</Text>
         <View style={styles.iconButtonWrapper}>
           <MaterialCommunityIcons
             name="plus-circle"
             size={36}
-            color="#222"
+            color="#111"
             style={styles.iconButton}
             onPress={() => setModalVisible(true)}
           />
@@ -394,12 +404,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 28,
     marginBottom: 10,
-    color: '#222',
+    color: PRIMARY_COLOR,
     letterSpacing: 0.2,
   },
   inputNew: {
     borderWidth: 1,
-    borderColor: '#6CA8F7',
+    borderColor: PRIMARY_COLOR,
     width: 260,
     height: 56,
     marginBottom: 12,
@@ -409,14 +419,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     color: '#222',
     fontSize: 15,
-    shadowColor: '#6CA8F7',
+    shadowColor: PRIMARY_COLOR,
     shadowOpacity: 0.04,
     shadowRadius: 2,
     justifyContent: 'center',
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#6CA8F7',
+    borderColor: PRIMARY_COLOR,
     borderRadius: 8,
     marginBottom: 12,
     backgroundColor: '#fff',
@@ -424,7 +434,7 @@ const styles = StyleSheet.create({
     width: 260,
     height: 56,
     justifyContent: 'center',
-    shadowColor: '#6CA8F7',
+    shadowColor: PRIMARY_COLOR,
     shadowOpacity: 0.04,
     shadowRadius: 2,
   },
@@ -440,7 +450,7 @@ const styles = StyleSheet.create({
   },
   saveBtnNew: {
     marginBottom: 14,
-    backgroundColor: '#6CA8F7',
+    backgroundColor: PRIMARY_COLOR,
     borderRadius: 8,
     paddingVertical: 10,
     minWidth: 180,
@@ -449,7 +459,7 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   saveBtnLabel: {
-    color: '#222',
+    color: '#111',
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 0.5,

@@ -7,6 +7,9 @@ import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
 
+const PRIMARY_COLOR = '#e0a86b';
+const SECONDARY_COLOR = '#e2af7a';
+
 export default function HotelOrientEliteVendors() {
   // Explicitly type as any[] to avoid linter errors
   const [maintenanceVendors, setMaintenanceVendors] = useState<any[]>([]);
@@ -191,11 +194,11 @@ function CommonVendorTable({ data }: { data: any[] }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#222' },
-  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1 },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#e0e0e0', paddingBottom: 4 },
-  tableHeaderCell: { flex: 1, fontWeight: 'bold', color: '#222', fontSize: 13 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: PRIMARY_COLOR },
+  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_COLOR },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: SECONDARY_COLOR, paddingBottom: 4, backgroundColor: SECONDARY_COLOR },
+  tableHeaderCell: { flex: 1, fontWeight: 'bold', color: '#111', fontSize: 13 },
   tableRow: { flexDirection: 'row', paddingVertical: 6, borderBottomWidth: 1, borderColor: '#f0f0f0' },
   tableCell: { flex: 1, color: '#222', fontSize: 13 },
-  pdfBtn: { alignSelf: 'flex-end', marginBottom: 16 },
+  pdfBtn: { alignSelf: 'flex-end', marginBottom: 16, backgroundColor: PRIMARY_COLOR },
 }); 

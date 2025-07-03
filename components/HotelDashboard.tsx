@@ -55,9 +55,13 @@ interface Payment {
   createdBy: string;
 }
 
+// Color palette for Hotel Orient Elite
+const PRIMARY_COLOR = '#e0a86b';
+const SECONDARY_COLOR = '#e2af7a';
+
 const summaryStyles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: PRIMARY_COLOR,
     borderRadius: 14,
     padding: 16,
     alignItems: 'center',
@@ -65,12 +69,14 @@ const summaryStyles = StyleSheet.create({
     width: '47%',
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: SECONDARY_COLOR,
   },
-  value: { fontSize: 22, fontWeight: 'bold' as 'bold', marginTop: 6, color: '#222' },
-  label: { fontSize: 13, color: '#666', marginTop: 2, textAlign: 'center' as 'center' },
+  value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: '#222' },
+  label: { fontSize: 13, color: '#6b4c1b', marginTop: 2, textAlign: 'center' },
 });
 
 export default function HotelDashboard({ branchId, branchName }: HotelDashboardProps) {
@@ -194,10 +200,10 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4 }}>{branchName} Dashboard</Text>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: PRIMARY_COLOR }}>{branchName} Dashboard</Text>
       {isOrientElite && (
         <>
-          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24 }}>
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
             <View style={{ position: 'relative' }}>
               <LineChart
                 data={{
@@ -280,33 +286,33 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="cash" size={32} color="#1976d2" />
-              <Text style={[summaryStyles.value, { color: '#1976d2' }]}>₹{todaySales}</Text>
+              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{todaySales}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="bank" size={32} color="#e53935" />
-              <Text style={[summaryStyles.value, { color: '#e53935' }]}>₹{todayExpenses}</Text>
+              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{todayExpenses}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
             </View>
-            <TouchableOpacity style={summaryStyles.card} onPress={() => router.push('/hotel-orient-elite-vendors')}>
-              <MaterialCommunityIcons name="account-group" size={32} color="#1976d2" />
-              <Text style={summaryStyles.value}>{vendorCount}</Text>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/hotel-orient-elite-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{vendorCount}</Text>
               <Text style={summaryStyles.label}>Vendors</Text>
             </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="wrench" size={32} color="#fbc02d" />
-              <Text style={[summaryStyles.value, { color: '#fbc02d' }]}>{openMaintCount}</Text>
+              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color="#43a047" />
-              <Text style={[summaryStyles.value, { color: '#43a047' }]}>{paidPayments}</Text>
+              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{paidPayments}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="clock-outline" size={32} color="#e53935" />
-              <Text style={[summaryStyles.value, { color: '#e53935' }]}>{pendingPayments}</Text>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{pendingPayments}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
             </View>
           </View>

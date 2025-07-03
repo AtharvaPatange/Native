@@ -8,6 +8,9 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+const ORIENT_PRIMARY = '#e0a86b';
+const ORIENT_SECONDARY = '#e2af7a';
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -30,7 +33,7 @@ export default function TabLayout() {
         name="hotel-orient-elite"
         options={{
           title: 'Hotel Orient Elite',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="house.fill" color={focused ? '#6CA8F7' : '#888'} />,
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="house.fill" color={focused ? ORIENT_PRIMARY : ORIENT_SECONDARY} />,
         }}
       />
       <Tabs.Screen

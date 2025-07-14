@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
+import { useAuth } from '@/components/AuthContext';
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
@@ -13,6 +14,7 @@ const ORIENT_SECONDARY = '#e2af7a';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { userRole } = useAuth();
 
   return (
     <Tabs
@@ -50,6 +52,22 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => <IconSymbol size={28} name="cup.and.saucer.fill" color={focused ? '#43a047' : '#888'} />,
         }}
       />
+      <Tabs.Screen
+        name="hotel-orient-elite-rooms"
+        options={{
+          title: 'Orient Elite Rooms',
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="bed.double.fill" color={focused ? ORIENT_PRIMARY : ORIENT_SECONDARY} />, // or any suitable icon
+        }}
+      />
+      {userRole === 'globalAdmin' && (
+        <Tabs.Screen
+          name="others"
+          options={{
+            title: 'Others',
+            tabBarIcon: ({ focused }) => <IconSymbol size={28} name="ellipsis.circle.fill" color={focused ? '#9c27b0' : '#888'} />,
+          }}
+        />
+      )}
     </Tabs>
   );
 }

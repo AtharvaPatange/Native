@@ -102,6 +102,33 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   // State for per-point tooltip
   const [pointTooltip, setPointTooltip] = useState<{ x: number; y: number; value: number; label: string; color: string; series: string } | null>(null);
 
+  // Ojas-specific state
+  const isOjas = branchId === 'ojas';
+  const [ojasSalesList, setOjasSalesList] = useState<any[]>([]);
+  const [ojasExpensesList, setOjasExpensesList] = useState<any[]>([]);
+  const [ojasVendorsList, setOjasVendorsList] = useState<any[]>([]);
+  const [ojasMaintenanceList, setOjasMaintenanceList] = useState<any[]>([]);
+  const [ojasPaymentsList, setOjasPaymentsList] = useState<any[]>([]);
+  // Ojas summary values
+  let ojasTodaySales = 0, ojasTodayExpenses = 0, ojasVendorCount = 0, ojasOpenMaintCount = 0, ojasPaidPayments = 0, ojasPendingPayments = 0;
+  if (isOjas) {
+    const now = new Date();
+    ojasTodaySales = ojasSalesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, s) => sum + (s.cash || 0), 0);
+    ojasTodayExpenses = ojasExpensesList.filter(e => {
+      if (!e.createdAt) return false;
+      const d = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, e) => sum + (e.cash || 0), 0);
+    ojasVendorCount = ojasVendorsList.length;
+    ojasOpenMaintCount = ojasMaintenanceList.filter(m => m.status?.toLowerCase() !== 'done').length;
+    ojasPaidPayments = ojasPaymentsList.filter(p => p.status === 'done' || p.status === 'paid').length;
+    ojasPendingPayments = ojasPaymentsList.filter(p => p.status === 'pending').length;
+  }
+
   // Prepare chart data for sales and expenses (last 7 days)
   const isOrientElite = branchId === 'orientElite';
   let chartLabels: string[] = [];
@@ -144,6 +171,46 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
     }
   }
 
+  // Ojas chart data
+  let ojasChartLabels: string[] = [];
+  let ojasSalesData: number[] = [];
+  let ojasExpensesData: number[] = [];
+  if (isOjas) {
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      ojasChartLabels.push(label);
+      // Sales sum for this day
+      const salesSum = ojasSalesList
+        .filter(s => {
+          if (!s.createdAt) return false;
+          const date = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, s) => sum + (s.cash || 0), 0);
+      ojasSalesData.push(salesSum);
+      // Expenses sum for this day
+      const expenseSum = ojasExpensesList
+        .filter(e => {
+          if (!e.createdAt) return false;
+          const date = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, e) => sum + (e.cash || 0), 0);
+      ojasExpensesData.push(expenseSum);
+    }
+  }
+
   // Calculate summary stats for today
   let todaySales = 0, todayExpenses = 0, vendorCount = 0, openMaintCount = 0, paidPayments = 0, pendingPayments = 0;
   if (isOrientElite) {
@@ -170,6 +237,79 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   const expensesTotal = expensesData.reduce((a, b) => a + b, 0);
   const expensesAvg = expensesData.length ? Math.round(expensesTotal / expensesData.length) : 0;
 
+  // Catena Cafe-specific state
+  const isCatenaCafe = branchId === 'catenaCafe';
+  const [catenaSalesList, setCatenaSalesList] = useState<any[]>([]);
+  const [catenaExpensesList, setCatenaExpensesList] = useState<any[]>([]);
+  const [catenaVendorsList, setCatenaVendorsList] = useState<any[]>([]);
+  const [catenaMaintenanceList, setCatenaMaintenanceList] = useState<any[]>([]);
+  const [catenaPaymentsList, setCatenaPaymentsList] = useState<any[]>([]);
+  // Catena Cafe summary values
+  let catenaTodaySales = 0, catenaTodayExpenses = 0, catenaVendorCount = 0, catenaOpenMaintCount = 0, catenaPaidPayments = 0, catenaPendingPayments = 0;
+  if (isCatenaCafe) {
+    const now = new Date();
+    catenaTodaySales = catenaSalesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, s) => sum + (s.cash || 0), 0);
+    catenaTodayExpenses = catenaExpensesList.filter(e => {
+      if (!e.createdAt) return false;
+      const d = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, e) => sum + (e.cash || 0), 0);
+    catenaVendorCount = catenaVendorsList.length;
+    catenaOpenMaintCount = catenaMaintenanceList.filter(m => m.status?.toLowerCase() !== 'done').length;
+    catenaPaidPayments = catenaPaymentsList.filter(p => p.status === 'done' || p.status === 'paid').length;
+    catenaPendingPayments = catenaPaymentsList.filter(p => p.status === 'pending').length;
+  }
+  // Catena Cafe chart data
+  let catenaChartLabels: string[] = [];
+  let catenaSalesData: number[] = [];
+  let catenaExpensesData: number[] = [];
+  if (isCatenaCafe) {
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const label = `${d.getMonth() + 1}/${d.getDate()}`;
+      catenaChartLabels.push(label);
+      // Sales sum for this day
+      const salesSum = catenaSalesList
+        .filter(s => {
+          if (!s.createdAt) return false;
+          const date = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, s) => sum + (s.cash || 0), 0);
+      catenaSalesData.push(salesSum);
+      // Expenses sum for this day
+      const expenseSum = catenaExpensesList
+        .filter(e => {
+          if (!e.createdAt) return false;
+          const date = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
+          return (
+            date.getFullYear() === d.getFullYear() &&
+            date.getMonth() === d.getMonth() &&
+            date.getDate() === d.getDate()
+          );
+        })
+        .reduce((sum, e) => sum + (e.cash || 0), 0);
+      catenaExpensesData.push(expenseSum);
+    }
+  }
+
+  // Add state for orientEliteRooms
+  const [orientEliteRooms, setOrientEliteRooms] = useState<any[]>([]);
+  let activeRoomsCount = 0;
+  if (isOrientElite) {
+    activeRoomsCount = orientEliteRooms.filter(r => r.status === 'active').length;
+  }
+
   useEffect(() => {
     // Sales
     const salesQ = query(collection(db, 'sales'), where('branchId', '==', branchId));
@@ -195,6 +335,69 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
     // Vendor Payments
     const payQ = query(collection(db, 'vendorPayments'), where('branchId', '==', branchId));
     const unsubPay = onSnapshot(payQ, snap => setPaymentsList(snap.docs.map(d => ({ ...(d.data() as Payment), id: d.id }))));
+
+    if (isOjas) {
+      // Ojas Sales
+      const salesQ = query(collection(db, 'ojassale'));
+      const unsubSales = onSnapshot(salesQ, snap => {
+        setOjasSalesList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Ojas Expenses
+      const expensesQ = query(collection(db, 'ojasexpense'));
+      const unsubExpenses = onSnapshot(expensesQ, snap => {
+        setOjasExpensesList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Ojas Vendors
+      const vendorsQ = query(collection(db, 'ojasvendors'));
+      const unsubVendors = onSnapshot(vendorsQ, snap => {
+        setOjasVendorsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Ojas Maintenance
+      const maintQ = query(collection(db, 'ojasmaintenance'));
+      const unsubMaint = onSnapshot(maintQ, snap => {
+        setOjasMaintenanceList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Ojas Vendor Payments
+      const payQ = query(collection(db, 'ojasvendorpayments'));
+      const unsubPay = onSnapshot(payQ, snap => {
+        setOjasPaymentsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
+    }
+    if (isCatenaCafe) {
+      // Catena Cafe Sales
+      const salesQ = query(collection(db, 'catenacafesale'));
+      const unsubSales = onSnapshot(salesQ, snap => {
+        setCatenaSalesList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Catena Cafe Expenses
+      const expensesQ = query(collection(db, 'catenacafeexpense'));
+      const unsubExpenses = onSnapshot(expensesQ, snap => {
+        setCatenaExpensesList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Catena Cafe Vendors
+      const vendorsQ = query(collection(db, 'catenacafevendors'));
+      const unsubVendors = onSnapshot(vendorsQ, snap => {
+        setCatenaVendorsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Catena Cafe Maintenance
+      const maintQ = query(collection(db, 'catenacafemaintenance'));
+      const unsubMaint = onSnapshot(maintQ, snap => {
+        setCatenaMaintenanceList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      // Catena Cafe Vendor Payments
+      const payQ = query(collection(db, 'catenacafevendorpayments'));
+      const unsubPay = onSnapshot(payQ, snap => {
+        setCatenaPaymentsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
+    }
+    if (isOrientElite) {
+      const unsubRooms = onSnapshot(collection(db, 'orientEliteRooms'), snap => {
+        setOrientEliteRooms(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); unsubRooms(); };
+    }
     return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
   }, [branchId]);
 
@@ -300,6 +503,11 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               <Text style={[summaryStyles.value, { color: '#111' }]}>{vendorCount}</Text>
               <Text style={summaryStyles.label}>Vendors</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/hotel-orient-elite-rooms')}>
+              <MaterialCommunityIcons name="bed" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{activeRoomsCount}</Text>
+              <Text style={summaryStyles.label}>Active Rooms</Text>
+            </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
               <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text>
@@ -318,8 +526,259 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
           </View>
         </>
       )}
+      {isOjas && (
+        <>
+          {/* Chart for Ojas */}
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+            <View style={{ position: 'relative' }}>
+              <LineChart
+                data={{
+                  labels: ojasChartLabels,
+                  datasets: [
+                    { data: ojasSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? '#1976d2' : 'rgba(25,118,210,0.3)', strokeWidth: 3, withDots: true },
+                    { data: ojasExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? '#e53935' : 'rgba(229,57,53,0.3)', strokeWidth: 3, withDots: true },
+                  ],
+                  legend: [],
+                }}
+                width={Dimensions.get('window').width - 48}
+                height={260}
+                yAxisLabel="₹"
+                yAxisSuffix=""
+                yLabelsOffset={8}
+                xLabelsOffset={-4}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  propsForDots: { r: '4', strokeWidth: '2', stroke: '#fff', pointerEvents: 'auto' },
+                  propsForBackgroundLines: { stroke: '#e0e0e0', strokeDasharray: '4' },
+                  propsForLabels: { fontWeight: 'bold', fontSize: 14 },
+                  style: { borderRadius: 18 },
+                  fillShadowGradient: '#000',
+                  fillShadowGradientOpacity: 0.04,
+                }}
+                bezier
+                style={{ borderRadius: 18 }}
+                fromZero
+                segments={5}
+                formatYLabel={y => `${y}`}
+                onDataPointClick={({ value, index, x, y }) => {
+                  let series = '';
+                  let color = '';
+                  if (ojasSalesData[index] === value) {
+                    series = 'Sales';
+                    color = '#1976d2';
+                  } else if (ojasExpensesData[index] === value) {
+                    series = 'Expenses';
+                    color = '#e53935';
+                  }
+                  setPointTooltip({
+                    x,
+                    y,
+                    value,
+                    label: ojasChartLabels[index],
+                    color,
+                    series,
+                  });
+                }}
+              />
+              {/* Per-point Tooltip Box as overlay */}
+              {pointTooltip && (
+                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: '#fff', borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eee' }}>
+                  <MaterialCommunityIcons name="close" size={20} color="#222" onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? '#1976d2' : '#e53935', marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
+                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
+                  <Text style={{ fontSize: 13, color: '#888', marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
+                </View>
+              )}
+            </View>
+            {/* Custom Legend */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, gap: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#222', marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: '#222', opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: '#222', fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 32 }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#888', marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: '#888', opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: '#888', fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
+              </View>
+            </View>
+          </View>
+          {/* Section Header for Summary */}
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          {/* Summary Cards Grid */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodaySales}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodayExpenses}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            </View>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasVendorCount}</Text>
+              <Text style={summaryStyles.label}>Vendors</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-riddhi-siddhi-hall')}>
+              <MaterialCommunityIcons name="party-popper" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>Riddhi Siddhi Hall</Text>
+              <Text style={summaryStyles.label}>Riddhi Siddhi Hall</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/ojas-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
+              <Text style={summaryStyles.label}>Raw Materials</Text>
+            </TouchableOpacity>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasOpenMaintCount}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPaidPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPendingPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
+            </View>
+          </View>
+        </>
+      )}
+      {isCatenaCafe && (
+        <>
+          {/* Chart for Catena Cafe */}
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+            <View style={{ position: 'relative' }}>
+              <LineChart
+                data={{
+                  labels: catenaChartLabels,
+                  datasets: [
+                    { data: catenaSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? '#1976d2' : 'rgba(25,118,210,0.3)', strokeWidth: 3, withDots: true },
+                    { data: catenaExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? '#e53935' : 'rgba(229,57,53,0.3)', strokeWidth: 3, withDots: true },
+                  ],
+                  legend: [],
+                }}
+                width={Dimensions.get('window').width - 48}
+                height={260}
+                yAxisLabel="₹"
+                yAxisSuffix=""
+                yLabelsOffset={8}
+                xLabelsOffset={-4}
+                chartConfig={{
+                  backgroundColor: '#fff',
+                  backgroundGradientFrom: '#fff',
+                  backgroundGradientTo: '#fff',
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+                  propsForDots: { r: '4', strokeWidth: '2', stroke: '#fff', pointerEvents: 'auto' },
+                  propsForBackgroundLines: { stroke: '#e0e0e0', strokeDasharray: '4' },
+                  propsForLabels: { fontWeight: 'bold', fontSize: 14 },
+                  style: { borderRadius: 18 },
+                  fillShadowGradient: '#000',
+                  fillShadowGradientOpacity: 0.04,
+                }}
+                bezier
+                style={{ borderRadius: 18 }}
+                fromZero
+                segments={5}
+                formatYLabel={y => `${y}`}
+                onDataPointClick={({ value, index, x, y }) => {
+                  let series = '';
+                  let color = '';
+                  if (catenaSalesData[index] === value) {
+                    series = 'Sales';
+                    color = '#1976d2';
+                  } else if (catenaExpensesData[index] === value) {
+                    series = 'Expenses';
+                    color = '#e53935';
+                  }
+                  setPointTooltip({
+                    x,
+                    y,
+                    value,
+                    label: catenaChartLabels[index],
+                    color,
+                    series,
+                  });
+                }}
+              />
+              {/* Per-point Tooltip Box as overlay */}
+              {pointTooltip && (
+                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: '#fff', borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eee' }}>
+                  <MaterialCommunityIcons name="close" size={20} color="#222" onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? '#1976d2' : '#e53935', marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
+                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
+                  <Text style={{ fontSize: 13, color: '#888', marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
+                </View>
+              )}
+            </View>
+            {/* Custom Legend */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, gap: 32 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#222', marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: '#222', opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: '#222', fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 32 }}>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#888', marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: '#888', opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: '#888', fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
+              </View>
+            </View>
+          </View>
+          {/* Section Header for Summary */}
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          {/* Summary Cards Grid */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodaySales}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodayExpenses}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            </View>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaVendorCount}</Text>
+              <Text style={summaryStyles.label}>Vendors</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/catena-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
+              <Text style={summaryStyles.label}>Raw Materials</Text>
+            </TouchableOpacity>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaOpenMaintCount}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPaidPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            </View>
+            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPendingPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
+            </View>
+          </View>
+        </>
+      )}
       {/* For other branches, keep the old UI (if needed) */}
-      {!isOrientElite && (
+      {!isOrientElite && !isOjas && !isCatenaCafe && (
         <>
       {userRole && (
         <Text style={{ alignSelf: 'center', backgroundColor: '#1976d2', color: '#fff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 4, marginBottom: 12, fontWeight: 'bold', fontSize: 14 }}>

@@ -2,10 +2,11 @@ import { useAuth } from '@/components/AuthContext';
 import HotelDashboard from '@/components/HotelDashboard';
 import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Appbar, Button, Text, TextInput } from 'react-native-paper';
 
 export default function CatenaCafeScreen() {
@@ -25,10 +26,24 @@ export default function CatenaCafeScreen() {
   // Maintenance form
   const [maintDesc, setMaintDesc] = useState('');
   const [maintRoom, setMaintRoom] = useState('');
+  // Add missing maintenance fields
+  const [maintVendorName, setMaintVendorName] = useState('');
+  const [maintVendorPhone, setMaintVendorPhone] = useState('');
+  const [maintPaymentMode, setMaintPaymentMode] = useState('cash');
+  const [maintStatus, setMaintStatus] = useState('pending');
+  // Food Bill form
+  const [foodBillAmount, setFoodBillAmount] = useState('');
+  const [foodBillPaymentMode, setFoodBillPaymentMode] = useState('cash');
+  const [foodBillStatus, setFoodBillStatus] = useState('pending');
   // Payment form
   const [payVendor, setPayVendor] = useState('');
   const [payAmount, setPayAmount] = useState('');
   const [payStatus, setPayStatus] = useState('pending');
+
+  // Raw materials purchasing state
+  const [rawDate, setRawDate] = useState<Date | null>(null);
+  const [showRawDatePicker, setShowRawDatePicker] = useState(false);
+  const [rawItems, setRawItems] = useState([{ name: '', amount: '' }]);
 
   // Handlers for Catena Cafe-specific collections
   const handleAddSale = async () => {
@@ -84,14 +99,39 @@ export default function CatenaCafeScreen() {
       await addDoc(collection(db, 'catenacafemaintenance'), {
         desc: maintDesc,
         room: maintRoom,
+        vendorName: maintVendorName,
+        vendorPhone: maintVendorPhone,
+        paymentMode: maintPaymentMode,
+        status: maintStatus,
         createdAt: new Date(),
         createdBy: user?.email || 'guest',
       });
       setMaintDesc('');
       setMaintRoom('');
+      setMaintVendorName('');
+      setMaintVendorPhone('');
+      setMaintPaymentMode('cash');
+      setMaintStatus('pending');
       Alert.alert('Success', 'Maintenance log added!');
     } catch {
       Alert.alert('Error', 'Failed to add maintenance log.');
+    }
+  };
+  const handleAddFoodBill = async () => {
+    try {
+      await addDoc(collection(db, 'catenacafefoodbills'), {
+        amount: Number(foodBillAmount),
+        paymentMode: foodBillPaymentMode,
+        status: foodBillStatus,
+        createdAt: new Date(),
+        createdBy: user?.email || 'guest',
+      });
+      setFoodBillAmount('');
+      setFoodBillPaymentMode('cash');
+      setFoodBillStatus('pending');
+      Alert.alert('Success', 'Food bill entry added!');
+    } catch {
+      Alert.alert('Error', 'Failed to add food bill entry.');
     }
   };
   const handleAddPayment = async () => {
@@ -110,6 +150,26 @@ export default function CatenaCafeScreen() {
     } catch {
       Alert.alert('Error', 'Failed to add vendor payment.');
     }
+  };
+
+  const handleAddRawItem = () => setRawItems([...rawItems, { name: '', amount: '' }]);
+  const handleRawItemChange = (idx: number, field: 'name' | 'amount', value: string) => {
+    setRawItems(items => items.map((item, i) => i === idx ? { ...item, [field]: value } : item));
+  };
+  const handleSaveRawPurchases = async () => {
+    if (!rawDate || rawItems.some(item => !item.name || !item.amount)) {
+      Alert.alert('Error', 'Please select a date and fill all item fields');
+      return;
+    }
+    await addDoc(collection(db, 'catenaRawPurchases'), {
+      date: rawDate.toISOString().split('T')[0],
+      items: rawItems.map(item => ({ name: item.name, amount: Number(item.amount) })),
+      createdAt: new Date(),
+      createdBy: user?.email || 'guest',
+    });
+    setRawDate(null);
+    setRawItems([{ name: '', amount: '' }]);
+    Alert.alert('Success', 'Raw material purchases added!');
   };
 
   return (
@@ -187,7 +247,53 @@ export default function CatenaCafeScreen() {
             <Text style={styles.sectionTitle}>Maintenance</Text>
             <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.input} />
             <TextInput placeholder="Room Number" value={maintRoom} onChangeText={setMaintRoom} style={styles.input} />
+            <TextInput placeholder="Vendor Name" value={maintVendorName} onChangeText={setMaintVendorName} style={styles.input} />
+            <TextInput placeholder="Phone Number" value={maintVendorPhone} onChangeText={setMaintVendorPhone} keyboardType="phone-pad" style={styles.input} />
+            <Picker
+              selectedValue={maintPaymentMode}
+              onValueChange={setMaintPaymentMode}
+              style={styles.picker}
+            >
+              <Picker.Item label="Cash" value="cash" />
+              <Picker.Item label="Online" value="online" />
+              <Picker.Item label="Card" value="card" />
+            </Picker>
+            <Picker
+              selectedValue={maintStatus}
+              onValueChange={setMaintStatus}
+              style={styles.picker}
+            >
+              <Picker.Item label="Pending" value="pending" />
+              <Picker.Item label="Done" value="done" />
+            </Picker>
             <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtn}>Save Maintenance</Button>
+            {/* 6. Food Bill */}
+            <Text style={styles.sectionTitle}>Food Bill</Text>
+            <TextInput
+              placeholder="Amount"
+              value={foodBillAmount}
+              onChangeText={setFoodBillAmount}
+              keyboardType="numeric"
+              style={styles.input}
+            />
+            <Picker
+              selectedValue={foodBillPaymentMode}
+              onValueChange={setFoodBillPaymentMode}
+              style={styles.picker}
+            >
+              <Picker.Item label="Cash" value="cash" />
+              <Picker.Item label="Online" value="online" />
+              <Picker.Item label="Card" value="card" />
+            </Picker>
+            <Picker
+              selectedValue={foodBillStatus}
+              onValueChange={setFoodBillStatus}
+              style={styles.picker}
+            >
+              <Picker.Item label="Pending" value="pending" />
+              <Picker.Item label="Done" value="done" />
+            </Picker>
+            <Button mode="contained" onPress={handleAddFoodBill} style={styles.saveBtn}>Save Food Bill</Button>
             {/* 5. Vendor Payment */}
             <Text style={styles.sectionTitle}>Vendor Payment</Text>
             <TextInput placeholder="Vendor Name" value={payVendor} onChangeText={setPayVendor} style={styles.input} />
@@ -201,6 +307,47 @@ export default function CatenaCafeScreen() {
               <Picker.Item label="Done" value="done" />
             </Picker>
             <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtn}>Save Payment</Button>
+            {/* 6. Daily Purchasing of Raw Materials */}
+            <Text style={styles.sectionTitle}>Daily Purchasing of Raw Materials</Text>
+            <TouchableOpacity onPress={() => setShowRawDatePicker(true)} style={styles.input}>
+              <TextInput
+                placeholder="Select Date"
+                value={rawDate ? rawDate.toISOString().split('T')[0] : ''}
+                editable={false}
+                pointerEvents="none"
+                style={{ backgroundColor: '#f9f9f9' }}
+              />
+            </TouchableOpacity>
+            {showRawDatePicker && (
+              <DateTimePicker
+                value={rawDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={(_, date) => {
+                  setShowRawDatePicker(false);
+                  if (date) setRawDate(date);
+                }}
+              />
+            )}
+            {rawItems.map((item, idx) => (
+              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <TextInput
+                  placeholder="Item Name"
+                  value={item.name}
+                  onChangeText={v => handleRawItemChange(idx, 'name', v)}
+                  style={[styles.input, { flex: 2, marginRight: 8 }]}
+                />
+                <TextInput
+                  placeholder="Amount"
+                  value={item.amount}
+                  onChangeText={v => handleRawItemChange(idx, 'amount', v)}
+                  keyboardType="numeric"
+                  style={[styles.input, { flex: 1 }]}
+                />
+              </View>
+            ))}
+            <Button mode="outlined" onPress={handleAddRawItem} style={{ marginBottom: 8 }}>Add Item</Button>
+            <Button mode="contained" onPress={handleSaveRawPurchases} style={styles.saveBtn}>Save Raw Purchases</Button>
             <Appbar.Action icon="close" onPress={() => setModalVisible(false)} style={{ alignSelf: 'flex-end', marginTop: 8 }} />
           </View>
         </ScrollView>

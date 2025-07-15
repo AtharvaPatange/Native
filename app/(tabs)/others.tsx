@@ -37,7 +37,28 @@ export default function OthersScreen() {
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Check if user is global admin
+  // Fetch transactions (move above conditional return)
+  useEffect(() => {
+    const q = query(
+      collection(db, 'paymentTransactions'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const transactionsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as PaymentTransaction[];
+      
+      setTransactions(transactionsData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Check if user is global admin (after all hooks)
   if (userRole !== 'globalAdmin') {
     return (
       <View style={styles.accessDeniedContainer}>
@@ -60,27 +81,6 @@ export default function OthersScreen() {
       </View>
     );
   }
-
-  // Fetch transactions
-  useEffect(() => {
-    const q = query(
-      collection(db, 'paymentTransactions'),
-      orderBy('createdAt', 'desc'),
-      limit(10)
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const transactionsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as PaymentTransaction[];
-      
-      setTransactions(transactionsData);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const handleAddPayment = async () => {
     if (!wherePaid.trim() || !amount.trim() || !date) {
@@ -161,16 +161,17 @@ export default function OthersScreen() {
               <DataTable.Header>
                 <DataTable.Title>Where Paid</DataTable.Title>
                 <DataTable.Title numeric>Amount</DataTable.Title>
+                <DataTable.Title style={{ width: 32 }}> </DataTable.Title>
                 <DataTable.Title>Date</DataTable.Title>
-                <DataTable.Title>Time</DataTable.Title>
               </DataTable.Header>
 
               {transactions.map((transaction) => (
                 <DataTable.Row key={transaction.id}>
                   <DataTable.Cell>{transaction.wherePaid}</DataTable.Cell>
                   <DataTable.Cell numeric>₹{transaction.amount}</DataTable.Cell>
+                  {/* Spacer between Amount and Date */}
+                  <View style={{ width: 32 }} />
                   <DataTable.Cell>{transaction.date}</DataTable.Cell>
-                  <DataTable.Cell>{transaction.time || '-'}</DataTable.Cell>
                 </DataTable.Row>
               ))}
             </DataTable>

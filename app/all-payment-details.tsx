@@ -81,15 +81,15 @@ export default function AllPaymentDetailsScreen() {
           <DataTable.Header>
             <DataTable.Title>Where Paid</DataTable.Title>
             <DataTable.Title numeric>Amount</DataTable.Title>
+            <DataTable.Title style={{ width: 32 }}> </DataTable.Title>
             <DataTable.Title>Date</DataTable.Title>
-            <DataTable.Title>Time</DataTable.Title>
           </DataTable.Header>
           {transactions.map((transaction) => (
             <DataTable.Row key={transaction.id}>
               <DataTable.Cell>{transaction.wherePaid}</DataTable.Cell>
               <DataTable.Cell numeric>₹{transaction.amount}</DataTable.Cell>
+              <View style={{ width: 32 }} />
               <DataTable.Cell>{transaction.date}</DataTable.Cell>
-              <DataTable.Cell>{transaction.time || '-'}</DataTable.Cell>
             </DataTable.Row>
           ))}
         </DataTable>

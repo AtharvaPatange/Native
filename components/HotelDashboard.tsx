@@ -18,6 +18,7 @@ interface Sale {
   online: number;
   pending: number;
   branchId: string;
+  status?: string; // Add this line
   createdAt?: { seconds: number };
   createdBy: string;
 }
@@ -213,6 +214,8 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
 
   // Calculate summary stats for today
   let todaySales = 0, todayExpenses = 0, vendorCount = 0, openMaintCount = 0, paidPayments = 0, pendingPayments = 0;
+  let todayPendingSalesCount = 0;
+  let todayPendingSalesAmount = 0;
   if (isOrientElite) {
     const now = new Date();
     todaySales = salesList.filter(s => {
@@ -229,6 +232,18 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
     openMaintCount = maintenanceList.filter(m => m.status?.toLowerCase() !== 'resolved').length;
     paidPayments = paymentsList.filter(p => p.status === 'paid').length;
     pendingPayments = paymentsList.filter(p => p.status === 'pending').length;
+    const todayPendingSales = salesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds * 1000);
+      return (
+        s.status === 'pending' &&
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    });
+    todayPendingSalesCount = todayPendingSales.length;
+    todayPendingSalesAmount = todayPendingSales.reduce((sum, s) => sum + (s.cash || 0), 0);
   }
 
   // Calculate totals and averages for tooltip
@@ -308,6 +323,25 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   let activeRoomsCount = 0;
   if (isOrientElite) {
     activeRoomsCount = orientEliteRooms.filter(r => r.status === 'active').length;
+  }
+
+  // Add state for orientEliteFoodBills
+  const [orientEliteFoodBills, setOrientEliteFoodBills] = useState<any[]>([]);
+  let todayFoodBillAmount = 0;
+  if (isOrientElite) {
+    const now = new Date();
+    todayFoodBillAmount = orientEliteFoodBills.filter(fb => {
+      if (!fb.createdAt) return false;
+      const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, fb) => sum + (fb.amount || 0), 0);
+  }
+
+  // Add state for orientEliteDormitory
+  const [orientEliteDormitory, setOrientEliteDormitory] = useState<any[]>([]);
+  let activeDormBedsCount = 0;
+  if (isOrientElite) {
+    activeDormBedsCount = orientEliteDormitory.filter(b => b.status === 'active').length;
   }
 
   useEffect(() => {
@@ -396,7 +430,13 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const unsubRooms = onSnapshot(collection(db, 'orientEliteRooms'), snap => {
         setOrientEliteRooms(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
-      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); unsubRooms(); };
+      const unsubFoodBills = onSnapshot(collection(db, 'foodBills'), snap => {
+        setOrientEliteFoodBills(snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(fb => fb.branchId === 'orientElite'));
+      });
+      const unsubDorm = onSnapshot(collection(db, 'orientEliteDormitory'), snap => {
+        setOrientEliteDormitory(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); unsubRooms(); unsubFoodBills(); unsubDorm(); };
     }
     return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
   }, [branchId]);
@@ -508,19 +548,31 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               <Text style={[summaryStyles.value, { color: '#111' }]}>{activeRoomsCount}</Text>
               <Text style={summaryStyles.label}>Active Rooms</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/hotel-orient-elite-food-bills')}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{todayFoodBillAmount}</Text>
+              <Text style={summaryStyles.label}>Food Bills</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/hotel-orient-elite-dormitory' })}>
+              <MaterialCommunityIcons name="bed-king" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{activeDormBedsCount}</Text>
+              <Text style={summaryStyles.label}>Dormitory Beds</Text>
+            </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
               <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{paidPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+              <TouchableOpacity onPress={() => router.push('/hotel-orient-elite-payments-paid')} style={{ alignItems: 'center' }}>
+                <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
+                <Text style={[summaryStyles.value, { color: '#111' }]}>{paidPayments}</Text>
+                <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+              </TouchableOpacity>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{pendingPayments}</Text>
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{todayPendingSalesAmount}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
             </View>
           </View>

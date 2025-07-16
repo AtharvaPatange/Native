@@ -32,7 +32,7 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="hotel-orient-elite"
+        name="index"
         options={{
           title: 'Hotel Orient Elite',
           tabBarIcon: ({ focused }) => <IconSymbol size={28} name="house.fill" color={focused ? ORIENT_PRIMARY : ORIENT_SECONDARY} />,

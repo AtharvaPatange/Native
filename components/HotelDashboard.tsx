@@ -565,9 +565,9 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <TouchableOpacity onPress={() => router.push('/hotel-orient-elite-payments-paid')} style={{ alignItems: 'center' }}>
-                <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-                <Text style={[summaryStyles.value, { color: '#111' }]}>{paidPayments}</Text>
-                <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{paidPayments}</Text>
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
               </TouchableOpacity>
             </View>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>

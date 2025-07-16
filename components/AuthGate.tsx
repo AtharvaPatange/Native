@@ -1,5 +1,6 @@
 import { auth, db } from '@/constants/firebaseConfig';
 import { Picker } from '@react-native-picker/picker';
+import * as Notifications from 'expo-notifications';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
@@ -24,7 +25,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.centered}>
-          <Surface style={styles.card} elevation={6}>
+          <Surface style={styles.card} elevation={5}>
             <View style={{ alignItems: 'center', marginBottom: 16 }}>
               <Avatar.Icon size={64} icon={isRegister ? 'account-plus' : 'login'} color="#fff" style={{ backgroundColor: '#1976d2' }} />
             </View>
@@ -76,8 +77,36 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                       email,
                       role,
                     });
+                    // Show welcome notification
+                    console.log('Attempting to show welcome notification after registration');
+                    try {
+                      await Notifications.scheduleNotificationAsync({
+                        content: {
+                          title: 'Welcome',
+                          body: 'Welcome to the app!',
+                          sound: true,
+                        },
+                        trigger: null,
+                      });
+                    } catch (e) {
+                      console.log('Notification error after registration:', e);
+                    }
                   } else {
                     await signInWithEmailAndPassword(auth, email, password);
+                    // Show welcome notification
+                    console.log('Attempting to show welcome notification after login');
+                    try {
+                      await Notifications.scheduleNotificationAsync({
+                        content: {
+                          title: 'Welcome',
+                          body: 'Welcome to the app!',
+                          sound: true,
+                        },
+                        trigger: null,
+                      });
+                    } catch (e) {
+                      console.log('Notification error after login:', e);
+                    }
                   }
                 } catch (e: any) {
                   setError(e.message || (isRegister ? 'Registration failed' : 'Login failed'));

@@ -4,8 +4,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { DataTable, Text } from 'react-native-paper';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { DataTable } from 'react-native-paper';
 
 const PRIMARY_COLOR = '#e0a86b';
 const SECONDARY_COLOR = '#e2af7a';
@@ -88,7 +88,7 @@ export default function AllPaymentDetailsScreen() {
             <DataTable.Row key={transaction.id}>
               <DataTable.Cell>{transaction.wherePaid}</DataTable.Cell>
               <DataTable.Cell numeric>₹{transaction.amount}</DataTable.Cell>
-              <View style={{ width: 32 }} />
+              <DataTable.Cell style={{ width: 32 }}><Text> </Text></DataTable.Cell>
               <DataTable.Cell>{transaction.date}</DataTable.Cell>
             </DataTable.Row>
           ))}

@@ -7,7 +7,20 @@ import { Picker } from '@react-native-picker/picker';
 import { addDoc, collection } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Appbar, Button, Text, TextInput } from 'react-native-paper';
+import { Button, Text, TextInput } from 'react-native-paper';
+
+// Ojas Veg Restaurant Theme Colors
+const OJAS_COLORS = {
+  primary: '#8B4513', // Reddish-brown (like the OJAS text)
+  secondary: '#228B22', // Green (like VEG)
+  accent: '#DC143C', // Red (like RESTAURANT)
+  highlight: '#FF8C00', // Orange (like the flower)
+  background: '#FFFFFF', // White
+  surface: '#F8F9FA', // Light gray for cards
+  text: '#2C2C2C', // Dark text
+  textLight: '#666666', // Light text
+  border: '#E0E0E0', // Light border
+};
 
 export default function HotelOjasScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -173,14 +186,23 @@ export default function HotelOjasScreen() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: OJAS_COLORS.background }}>
       <View style={styles.appbar}>
-        <Text style={styles.title}>Hotel Ojas</Text>
+        <View style={styles.logoContainer}>
+          <View style={styles.logoGraphic}>
+            <View style={styles.flowerIcon}>
+              <MaterialCommunityIcons name="flower" size={24} color={OJAS_COLORS.highlight} />
+            </View>
+          </View>
+          <Text style={styles.title}>OJAS</Text>
+          <Text style={styles.subtitle}>VEG RESTAURANT</Text>
+          <Text style={styles.address}>1st Floor, Hotel Orient Elite</Text>
+        </View>
         <View style={styles.iconButtonWrapper}>
           <MaterialCommunityIcons
             name="plus-circle"
             size={36}
-            color="#1976d2"
+            color={OJAS_COLORS.accent}
             style={styles.iconButton}
             onPress={() => setModalVisible(true)}
           />
@@ -195,160 +217,317 @@ export default function HotelOjasScreen() {
       >
         <ScrollView style={styles.modalScroll} contentContainerStyle={{ paddingBottom: 32 }}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Entries</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Entries</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <MaterialCommunityIcons name="close" size={24} color={OJAS_COLORS.text} />
+              </TouchableOpacity>
+            </View>
             {/* 1. Today&apos;s Total Sale */}
-            <Text style={styles.sectionTitle}>Today&apos;s Total Sale</Text>
-            <TextInput placeholder="Cash" value={saleCash} onChangeText={setSaleCash} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={saleType}
-              onValueChange={setSaleType}
-              style={styles.picker}
-            >
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-              <Picker.Item label="Bank Transfer" value="bank" />
-            </Picker>
-            <Picker
-              selectedValue={saleStatus}
-              onValueChange={setSaleStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddSale} style={styles.saveBtn}>Save Sale</Button>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Today&apos;s Total Sale</Text>
+              <TextInput 
+                placeholder="Cash" 
+                value={saleCash} 
+                onChangeText={setSaleCash} 
+                keyboardType="numeric" 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <Picker
+                selectedValue={saleType}
+                onValueChange={setSaleType}
+                style={styles.picker}
+              >
+                <Picker.Item label="Online" value="online" />
+                <Picker.Item label="Card" value="card" />
+                <Picker.Item label="Bank Transfer" value="bank" />
+              </Picker>
+              <Picker
+                selectedValue={saleStatus}
+                onValueChange={setSaleStatus}
+                style={styles.picker}
+              >
+                <Picker.Item label="Pending" value="pending" />
+                <Picker.Item label="Done" value="done" />
+              </Picker>
+              <Button 
+                mode="contained" 
+                onPress={handleAddSale} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Sale
+              </Button>
+            </View>
+
             {/* 2. Today&apos;s Total Expense */}
-            <Text style={styles.sectionTitle}>Today&apos;s Total Expense</Text>
-            <TextInput placeholder="Cash" value={expenseCash} onChangeText={setExpenseCash} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={expenseType}
-              onValueChange={setExpenseType}
-              style={styles.picker}
-            >
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-              <Picker.Item label="Bank Transfer" value="bank" />
-            </Picker>
-            <Picker
-              selectedValue={expenseStatus}
-              onValueChange={setExpenseStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddExpense} style={styles.saveBtn}>Save Expense</Button>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Today&apos;s Total Expense</Text>
+              <TextInput 
+                placeholder="Cash" 
+                value={expenseCash} 
+                onChangeText={setExpenseCash} 
+                keyboardType="numeric" 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <Picker
+                selectedValue={expenseType}
+                onValueChange={setExpenseType}
+                style={styles.picker}
+              >
+                <Picker.Item label="Online" value="online" />
+                <Picker.Item label="Card" value="card" />
+                <Picker.Item label="Bank Transfer" value="bank" />
+              </Picker>
+              <Picker
+                selectedValue={expenseStatus}
+                onValueChange={setExpenseStatus}
+                style={styles.picker}
+              >
+                <Picker.Item label="Pending" value="pending" />
+                <Picker.Item label="Done" value="done" />
+              </Picker>
+              <Button 
+                mode="contained" 
+                onPress={handleAddExpense} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Expense
+              </Button>
+            </View>
+
             {/* 3. Vendor List */}
-            <Text style={styles.sectionTitle}>Vendor List</Text>
-            <TextInput placeholder="Vendor Name" value={vendorName} onChangeText={setVendorName} style={styles.input} />
-            <TextInput placeholder="Contact Number" value={vendorContact} onChangeText={setVendorContact} keyboardType="phone-pad" style={styles.input} />
-            <Button mode="contained" onPress={handleAddVendor} style={styles.saveBtn}>Save Vendor</Button>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Vendor List</Text>
+              <TextInput 
+                placeholder="Vendor Name" 
+                value={vendorName} 
+                onChangeText={setVendorName} 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <TextInput 
+                placeholder="Contact Number" 
+                value={vendorContact} 
+                onChangeText={setVendorContact} 
+                keyboardType="phone-pad" 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <Button 
+                mode="contained" 
+                onPress={handleAddVendor} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Vendor
+              </Button>
+            </View>
+
             {/* 4. Maintenance */}
-            <Text style={styles.sectionTitle}>Maintenance</Text>
-            <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.input} />
-            <TextInput placeholder="Room Number" value={maintRoom} onChangeText={setMaintRoom} style={styles.input} />
-            <TextInput placeholder="Vendor Name" value={maintVendorName} onChangeText={setMaintVendorName} style={styles.input} />
-            <TextInput placeholder="Phone Number" value={maintVendorPhone} onChangeText={setMaintVendorPhone} keyboardType="phone-pad" style={styles.input} />
-            <Picker
-              selectedValue={maintPaymentMode}
-              onValueChange={setMaintPaymentMode}
-              style={styles.picker}
-            >
-              <Picker.Item label="Cash" value="cash" />
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-            </Picker>
-            <Picker
-              selectedValue={maintStatus}
-              onValueChange={setMaintStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtn}>Save Maintenance</Button>
-            {/* 6. Food Bill */}
-            <Text style={styles.sectionTitle}>Food Bill</Text>
-            <TextInput
-              placeholder="Amount"
-              value={foodBillAmount}
-              onChangeText={setFoodBillAmount}
-              keyboardType="numeric"
-              style={styles.input}
-            />
-            <Picker
-              selectedValue={foodBillPaymentMode}
-              onValueChange={setFoodBillPaymentMode}
-              style={styles.picker}
-            >
-              <Picker.Item label="Cash" value="cash" />
-              <Picker.Item label="Online" value="online" />
-              <Picker.Item label="Card" value="card" />
-            </Picker>
-            <Picker
-              selectedValue={foodBillStatus}
-              onValueChange={setFoodBillStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddFoodBill} style={styles.saveBtn}>Save Food Bill</Button>
-            {/* 5. Vendor Payment */}
-            <Text style={styles.sectionTitle}>Vendor Payment</Text>
-            <TextInput placeholder="Vendor Name" value={payVendor} onChangeText={setPayVendor} style={styles.input} />
-            <TextInput placeholder="Amount" value={payAmount} onChangeText={setPayAmount} keyboardType="numeric" style={styles.input} />
-            <Picker
-              selectedValue={payStatus}
-              onValueChange={setPayStatus}
-              style={styles.picker}
-            >
-              <Picker.Item label="Pending" value="pending" />
-              <Picker.Item label="Done" value="done" />
-            </Picker>
-            <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtn}>Save Payment</Button>
-            {/* 6. Daily Purchasing of Raw Materials */}
-            <Text style={styles.sectionTitle}>Daily Purchasing of Raw Materials</Text>
-            <TouchableOpacity onPress={() => setShowRawDatePicker(true)} style={styles.input}>
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Maintenance</Text>
+              <TextInput 
+                placeholder="Description" 
+                value={maintDesc} 
+                onChangeText={setMaintDesc} 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <TextInput 
+                placeholder="Room Number" 
+                value={maintRoom} 
+                onChangeText={setMaintRoom} 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <TextInput 
+                placeholder="Vendor Name" 
+                value={maintVendorName} 
+                onChangeText={setMaintVendorName} 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <TextInput 
+                placeholder="Phone Number" 
+                value={maintVendorPhone} 
+                onChangeText={setMaintVendorPhone} 
+                keyboardType="phone-pad" 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <Picker
+                selectedValue={maintPaymentMode}
+                onValueChange={setMaintPaymentMode}
+                style={styles.picker}
+              >
+                <Picker.Item label="Cash" value="cash" />
+                <Picker.Item label="Online" value="online" />
+                <Picker.Item label="Card" value="card" />
+              </Picker>
+              <Picker
+                selectedValue={maintStatus}
+                onValueChange={setMaintStatus}
+                style={styles.picker}
+              >
+                <Picker.Item label="Pending" value="pending" />
+                <Picker.Item label="Done" value="done" />
+              </Picker>
+              <Button 
+                mode="contained" 
+                onPress={handleAddMaintenance} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Maintenance
+              </Button>
+            </View>
+
+            {/* 5. Food Bill */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Food Bill</Text>
               <TextInput
-                placeholder="Select Date"
-                value={rawDate ? rawDate.toISOString().split('T')[0] : ''}
-                editable={false}
-                pointerEvents="none"
-                style={{ backgroundColor: '#f9f9f9' }}
+                placeholder="Amount"
+                value={foodBillAmount}
+                onChangeText={setFoodBillAmount}
+                keyboardType="numeric"
+                style={styles.input}
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
               />
-            </TouchableOpacity>
-            {showRawDatePicker && (
-              <DateTimePicker
-                value={rawDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(_, date) => {
-                  setShowRawDatePicker(false);
-                  if (date) setRawDate(date);
-                }}
+              <Picker
+                selectedValue={foodBillPaymentMode}
+                onValueChange={setFoodBillPaymentMode}
+                style={styles.picker}
+              >
+                <Picker.Item label="Cash" value="cash" />
+                <Picker.Item label="Online" value="online" />
+                <Picker.Item label="Card" value="card" />
+              </Picker>
+              <Picker
+                selectedValue={foodBillStatus}
+                onValueChange={setFoodBillStatus}
+                style={styles.picker}
+              >
+                <Picker.Item label="Pending" value="pending" />
+                <Picker.Item label="Done" value="done" />
+              </Picker>
+              <Button 
+                mode="contained" 
+                onPress={handleAddFoodBill} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Food Bill
+              </Button>
+            </View>
+
+            {/* 6. Vendor Payment */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Vendor Payment</Text>
+              <TextInput 
+                placeholder="Vendor Name" 
+                value={payVendor} 
+                onChangeText={setPayVendor} 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
               />
-            )}
-            {rawItems.map((item, idx) => (
-              <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <TextInput 
+                placeholder="Amount" 
+                value={payAmount} 
+                onChangeText={setPayAmount} 
+                keyboardType="numeric" 
+                style={styles.input} 
+                theme={{ colors: { primary: OJAS_COLORS.primary } }}
+              />
+              <Picker
+                selectedValue={payStatus}
+                onValueChange={setPayStatus}
+                style={styles.picker}
+              >
+                <Picker.Item label="Pending" value="pending" />
+                <Picker.Item label="Done" value="done" />
+              </Picker>
+              <Button 
+                mode="contained" 
+                onPress={handleAddPayment} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Payment
+              </Button>
+            </View>
+
+            {/* 7. Daily Purchasing of Raw Materials */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Daily Purchasing of Raw Materials</Text>
+              <TouchableOpacity onPress={() => setShowRawDatePicker(true)} style={styles.dateInput}>
                 <TextInput
-                  placeholder="Item Name"
-                  value={item.name}
-                  onChangeText={v => handleRawItemChange(idx, 'name', v)}
-                  style={[styles.input, { flex: 2, marginRight: 8 }]}
+                  placeholder="Select Date"
+                  value={rawDate ? rawDate.toISOString().split('T')[0] : ''}
+                  editable={false}
+                  pointerEvents="none"
+                  style={styles.input}
+                  theme={{ colors: { primary: OJAS_COLORS.primary } }}
                 />
-                <TextInput
-                  placeholder="Amount"
-                  value={item.amount}
-                  onChangeText={v => handleRawItemChange(idx, 'amount', v)}
-                  keyboardType="numeric"
-                  style={[styles.input, { flex: 1 }]}
+              </TouchableOpacity>
+              {showRawDatePicker && (
+                <DateTimePicker
+                  value={rawDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(_, date) => {
+                    setShowRawDatePicker(false);
+                    if (date) setRawDate(date);
+                  }}
                 />
-              </View>
-            ))}
-            <Button mode="outlined" onPress={handleAddRawItem} style={{ marginBottom: 8 }}>Add Item</Button>
-            <Button mode="contained" onPress={handleSaveRawPurchases} style={styles.saveBtn}>Save Raw Purchases</Button>
-            <Appbar.Action icon="close" onPress={() => setModalVisible(false)} style={{ alignSelf: 'flex-end', marginTop: 8 }} />
+              )}
+              {rawItems.map((item, idx) => (
+                <View key={idx} style={styles.rawItemRow}>
+                  <TextInput
+                    placeholder="Item Name"
+                    value={item.name}
+                    onChangeText={v => handleRawItemChange(idx, 'name', v)}
+                    style={[styles.input, styles.itemNameInput]}
+                    theme={{ colors: { primary: OJAS_COLORS.primary } }}
+                  />
+                  <TextInput
+                    placeholder="Amount"
+                    value={item.amount}
+                    onChangeText={v => handleRawItemChange(idx, 'amount', v)}
+                    keyboardType="numeric"
+                    style={[styles.input, styles.itemAmountInput]}
+                    theme={{ colors: { primary: OJAS_COLORS.primary } }}
+                  />
+                </View>
+              ))}
+              <Button 
+                mode="outlined" 
+                onPress={handleAddRawItem} 
+                style={styles.addItemBtn}
+                textColor={OJAS_COLORS.primary}
+                buttonColor={OJAS_COLORS.background}
+              >
+                Add Item
+              </Button>
+              <Button 
+                mode="contained" 
+                onPress={handleSaveRawPurchases} 
+                style={styles.saveBtn}
+                buttonColor={OJAS_COLORS.primary}
+                textColor={OJAS_COLORS.background}
+              >
+                Save Raw Purchases
+              </Button>
+            </View>
           </View>
         </ScrollView>
       </Modal>
@@ -358,72 +537,158 @@ export default function HotelOjasScreen() {
 
 const styles = StyleSheet.create({
   appbar: {
-    backgroundColor: '#63b3ed', // sky blue
-    elevation: 4,
+    backgroundColor: OJAS_COLORS.primary,
+    elevation: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    height: 90,
+    height: 120,
     position: 'relative',
     justifyContent: 'center',
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  logoContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoGraphic: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  flowerIcon: {
+    backgroundColor: OJAS_COLORS.background,
+    borderRadius: 20,
+    padding: 4,
+    marginRight: 8,
   },
   title: {
-    color: '#fff',
+    color: OJAS_COLORS.background,
     fontWeight: 'bold',
-    fontSize: 22,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    paddingTop: 22,
-    zIndex: 1,
+    fontSize: 28,
+    fontFamily: 'serif',
+    letterSpacing: 2,
+  },
+  subtitle: {
+    color: OJAS_COLORS.background,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  address: {
+    color: OJAS_COLORS.background,
+    fontSize: 10,
+    marginTop: 2,
+    opacity: 0.9,
   },
   iconButtonWrapper: {
     position: 'absolute',
     right: 16,
-    top: 40,
+    top: 60,
     zIndex: 2,
   },
   iconButton: {},
   modalScroll: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: OJAS_COLORS.surface,
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
+    backgroundColor: OJAS_COLORS.background,
+    borderRadius: 16,
+    padding: 20,
     margin: 16,
     alignItems: 'stretch',
-    elevation: 4,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: OJAS_COLORS.border,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    color: OJAS_COLORS.primary,
     textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: OJAS_COLORS.surface,
+  },
+  sectionCard: {
+    backgroundColor: OJAS_COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: OJAS_COLORS.secondary,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 18,
-    marginBottom: 6,
+    marginBottom: 16,
+    color: OJAS_COLORS.primary,
+    textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: OJAS_COLORS.border,
     width: '100%',
     marginBottom: 12,
-    padding: 8,
-    borderRadius: 6,
-    backgroundColor: '#f9f9f9',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: OJAS_COLORS.background,
+    fontSize: 16,
   },
   picker: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: OJAS_COLORS.background,
     marginBottom: 12,
-    borderRadius: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: OJAS_COLORS.border,
   },
   saveBtn: {
-    marginBottom: 16,
-    backgroundColor: '#1976d2',
+    marginBottom: 8,
+    borderRadius: 8,
+    paddingVertical: 4,
+  },
+  dateInput: {
+    marginBottom: 12,
+  },
+  rawItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  itemNameInput: {
+    flex: 2,
+  },
+  itemAmountInput: {
+    flex: 1,
+  },
+  addItemBtn: {
+    marginBottom: 12,
+    borderRadius: 8,
+    borderColor: OJAS_COLORS.primary,
   },
 }); 

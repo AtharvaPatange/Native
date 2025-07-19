@@ -12,6 +12,10 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 const ORIENT_PRIMARY = '#e0a86b';
 const ORIENT_SECONDARY = '#e2af7a';
 
+// Ojas Veg Restaurant Theme Colors
+const OJAS_PRIMARY = '#8B4513'; // Reddish-brown (like the OJAS text)
+const OJAS_SECONDARY = '#228B22'; // Green (like VEG)
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { userRole } = useAuth();
@@ -42,7 +46,7 @@ export default function TabLayout() {
         name="hotel-ojas"
         options={{
           title: 'Hotel Ojas',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="star.fill" color={focused ? '#1976d2' : '#888'} />,
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="star.fill" color={focused ? OJAS_PRIMARY : OJAS_SECONDARY} />,
         }}
       />
       <Tabs.Screen

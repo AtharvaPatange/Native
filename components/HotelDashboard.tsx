@@ -60,6 +60,31 @@ interface Payment {
 const PRIMARY_COLOR = '#e0a86b';
 const SECONDARY_COLOR = '#e2af7a';
 
+// Ojas Veg Restaurant Theme Colors
+const OJAS_COLORS = {
+  primary: '#8B4513', // Reddish-brown (like the OJAS text)
+  secondary: '#228B22', // Green (like VEG)
+  accent: '#DC143C', // Red (like RESTAURANT)
+  highlight: '#FF8C00', // Orange (like the flower)
+  background: '#FFFFFF', // White
+  surface: '#F8F9FA', // Light gray for cards
+  text: '#2C2C2C', // Dark text
+  textLight: '#666666', // Light text
+  border: '#E0E0E0', // Light border
+};
+
+// Catena Cafe Theme Colors
+const CATENA_COLORS = {
+  primary: '#388e3c', // Vibrant green
+  secondary: '#66bb6a', // Lighter green
+  accent: '#1b5e20', // Dark green
+  background: '#f6fff7', // Very light green background
+  surface: '#e8f5e9', // Card background
+  text: '#1b5e20', // Dark text
+  textLight: '#388e3c', // Lighter text
+  border: '#b2dfdb', // Light border
+};
+
 const summaryStyles = StyleSheet.create({
   card: {
     backgroundColor: PRIMARY_COLOR,
@@ -78,6 +103,48 @@ const summaryStyles = StyleSheet.create({
   },
   value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: '#222' },
   label: { fontSize: 13, color: '#6b4c1b', marginTop: 2, textAlign: 'center' },
+});
+
+// Ojas-specific summary styles
+const ojasSummaryStyles = StyleSheet.create({
+  card: {
+    backgroundColor: OJAS_COLORS.surface,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '47%',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: OJAS_COLORS.border,
+  },
+  value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: OJAS_COLORS.text },
+  label: { fontSize: 13, color: OJAS_COLORS.textLight, marginTop: 2, textAlign: 'center' },
+});
+
+// Catena Cafe summary styles
+const catenaSummaryStyles = StyleSheet.create({
+  card: {
+    backgroundColor: CATENA_COLORS.surface,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '47%',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: CATENA_COLORS.border,
+  },
+  value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: CATENA_COLORS.text },
+  label: { fontSize: 13, color: CATENA_COLORS.textLight, marginTop: 2, textAlign: 'center' },
 });
 
 export default function HotelDashboard({ branchId, branchName }: HotelDashboardProps) {
@@ -443,7 +510,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: PRIMARY_COLOR }}>{branchName} Dashboard</Text>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: isOjas ? OJAS_COLORS.primary : PRIMARY_COLOR }}>{branchName} Dashboard</Text>
       {isOrientElite && (
         <>
           <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
@@ -581,14 +648,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       {isOjas && (
         <>
           {/* Chart for Ojas */}
-          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+          <View style={{ marginBottom: 32, backgroundColor: OJAS_COLORS.background, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: OJAS_COLORS.primary, borderWidth: 1 }}>
             <View style={{ position: 'relative' }}>
               <LineChart
                 data={{
                   labels: ojasChartLabels,
                   datasets: [
-                    { data: ojasSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? '#1976d2' : 'rgba(25,118,210,0.3)', strokeWidth: 3, withDots: true },
-                    { data: ojasExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? '#e53935' : 'rgba(229,57,53,0.3)', strokeWidth: 3, withDots: true },
+                    { data: ojasSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? OJAS_COLORS.primary : 'rgba(139,69,19,0.3)', strokeWidth: 3, withDots: true },
+                    { data: ojasExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? OJAS_COLORS.accent : 'rgba(220,20,60,0.3)', strokeWidth: 3, withDots: true },
                   ],
                   legend: [],
                 }}
@@ -599,17 +666,17 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
                 yLabelsOffset={8}
                 xLabelsOffset={-4}
                 chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
+                  backgroundColor: OJAS_COLORS.background,
+                  backgroundGradientFrom: OJAS_COLORS.background,
+                  backgroundGradientTo: OJAS_COLORS.background,
                   decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  propsForDots: { r: '4', strokeWidth: '2', stroke: '#fff', pointerEvents: 'auto' },
-                  propsForBackgroundLines: { stroke: '#e0e0e0', strokeDasharray: '4' },
+                  color: (opacity = 1) => `rgba(44,44,44,${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(44,44,44,${opacity})`,
+                  propsForDots: { r: '4', strokeWidth: '2', stroke: OJAS_COLORS.background, pointerEvents: 'auto' },
+                  propsForBackgroundLines: { stroke: OJAS_COLORS.border, strokeDasharray: '4' },
                   propsForLabels: { fontWeight: 'bold', fontSize: 14 },
                   style: { borderRadius: 18 },
-                  fillShadowGradient: '#000',
+                  fillShadowGradient: OJAS_COLORS.primary,
                   fillShadowGradientOpacity: 0.04,
                 }}
                 bezier
@@ -622,10 +689,10 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
                   let color = '';
                   if (ojasSalesData[index] === value) {
                     series = 'Sales';
-                    color = '#1976d2';
+                    color = OJAS_COLORS.primary;
                   } else if (ojasExpensesData[index] === value) {
                     series = 'Expenses';
-                    color = '#e53935';
+                    color = OJAS_COLORS.accent;
                   }
                   setPointTooltip({
                     x,
@@ -639,74 +706,74 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               />
               {/* Per-point Tooltip Box as overlay */}
               {pointTooltip && (
-                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: '#fff', borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eee' }}>
-                  <MaterialCommunityIcons name="close" size={20} color="#222" onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
-                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? '#1976d2' : '#e53935', marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
-                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
-                  <Text style={{ fontSize: 13, color: '#888', marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
+                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: OJAS_COLORS.background, borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: OJAS_COLORS.border }}>
+                  <MaterialCommunityIcons name="close" size={20} color={OJAS_COLORS.text} onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? OJAS_COLORS.primary : OJAS_COLORS.accent, marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
+                  <Text style={{ fontSize: 15, color: OJAS_COLORS.text, fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
+                  <Text style={{ fontSize: 13, color: OJAS_COLORS.textLight, marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
                 </View>
               )}
             </View>
             {/* Custom Legend */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, gap: 32 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#222', marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: '#222', opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
-                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: '#222', fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: OJAS_COLORS.primary, marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: OJAS_COLORS.primary, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: OJAS_COLORS.primary, fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 32 }}>
-                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#888', marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: '#888', opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
-                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: '#888', fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: OJAS_COLORS.accent, marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: OJAS_COLORS.accent, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: OJAS_COLORS.accent, fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
               </View>
             </View>
           </View>
           {/* Section Header for Summary */}
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: OJAS_COLORS.primary, marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
-              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodaySales}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-sales-report')}>
+              <MaterialCommunityIcons name="cash" size={32} color={OJAS_COLORS.primary} />
+              <Text style={[ojasSummaryStyles.value]}>₹{ojasTodaySales}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Today&apos;s Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
-              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodayExpenses}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-expense-report')}>
+              <MaterialCommunityIcons name="bank" size={32} color={OJAS_COLORS.accent} />
+              <Text style={[ojasSummaryStyles.value]}>₹{ojasTodayExpenses}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Today&apos;s Expenses</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-vendors')}>
-              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasVendorCount}</Text>
-              <Text style={summaryStyles.label}>Vendors</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={OJAS_COLORS.secondary} />
+              <Text style={[ojasSummaryStyles.value]}>{ojasVendorCount}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Vendors</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-riddhi-siddhi-hall')}>
-              <MaterialCommunityIcons name="party-popper" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Riddhi Siddhi Hall</Text>
-              <Text style={summaryStyles.label}>Riddhi Siddhi Hall</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-riddhi-siddhi-hall')}>
+              <MaterialCommunityIcons name="party-popper" size={32} color={OJAS_COLORS.highlight} />
+              <Text style={[ojasSummaryStyles.value]}>Riddhi Siddhi Hall</Text>
+              <Text style={[ojasSummaryStyles.label]}>Riddhi Siddhi Hall</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/ojas-raw-materials' })}>
-              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
-              <Text style={summaryStyles.label}>Raw Materials</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push({ pathname: '/ojas-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={OJAS_COLORS.secondary} />
+              <Text style={[ojasSummaryStyles.value]}>Raw Materials</Text>
+              <Text style={[ojasSummaryStyles.label]}>Raw Materials</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-foodbill-report')}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={summaryStyles.label}>Food Bill</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-foodbill-report')}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={OJAS_COLORS.accent} />
+              <Text style={[ojasSummaryStyles.value]}>Food Bill</Text>
+              <Text style={[ojasSummaryStyles.label]}>Food Bill</Text>
             </TouchableOpacity>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasOpenMaintCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            <View style={[ojasSummaryStyles.card]}>
+              <MaterialCommunityIcons name="wrench" size={32} color={OJAS_COLORS.highlight} />
+              <Text style={[ojasSummaryStyles.value]}>{ojasOpenMaintCount}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Open Maintenance</Text>
             </View>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPaidPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            <View style={[ojasSummaryStyles.card]}>
+              <MaterialCommunityIcons name="check-circle" size={32} color={OJAS_COLORS.secondary} />
+              <Text style={[ojasSummaryStyles.value]}>{ojasPaidPayments}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Payments Paid</Text>
             </View>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-payments-pending')}>
-              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPendingPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
+            <TouchableOpacity style={[ojasSummaryStyles.card]} onPress={() => router.push('/ojas-payments-pending')}>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={OJAS_COLORS.accent} />
+              <Text style={[ojasSummaryStyles.value]}>{ojasPendingPayments}</Text>
+              <Text style={[ojasSummaryStyles.label]}>Payments Pending</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -714,14 +781,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       {isCatenaCafe && (
         <>
           {/* Chart for Catena Cafe */}
-          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+          <View style={{ marginBottom: 32, backgroundColor: CATENA_COLORS.background, borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: CATENA_COLORS.primary, borderWidth: 1 }}>
             <View style={{ position: 'relative' }}>
               <LineChart
                 data={{
                   labels: catenaChartLabels,
                   datasets: [
-                    { data: catenaSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? '#1976d2' : 'rgba(25,118,210,0.3)', strokeWidth: 3, withDots: true },
-                    { data: catenaExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? '#e53935' : 'rgba(229,57,53,0.3)', strokeWidth: 3, withDots: true },
+                    { data: catenaSalesData, color: () => selectedSeries === null || selectedSeries === 'sales' ? CATENA_COLORS.primary : 'rgba(56,142,60,0.3)', strokeWidth: 3, withDots: true },
+                    { data: catenaExpensesData, color: () => selectedSeries === null || selectedSeries === 'expenses' ? CATENA_COLORS.accent : 'rgba(27,94,32,0.3)', strokeWidth: 3, withDots: true },
                   ],
                   legend: [],
                 }}
@@ -732,17 +799,17 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
                 yLabelsOffset={8}
                 xLabelsOffset={-4}
                 chartConfig={{
-                  backgroundColor: '#fff',
-                  backgroundGradientFrom: '#fff',
-                  backgroundGradientTo: '#fff',
+                  backgroundColor: CATENA_COLORS.background,
+                  backgroundGradientFrom: CATENA_COLORS.background,
+                  backgroundGradientTo: CATENA_COLORS.background,
                   decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
-                  propsForDots: { r: '4', strokeWidth: '2', stroke: '#fff', pointerEvents: 'auto' },
-                  propsForBackgroundLines: { stroke: '#e0e0e0', strokeDasharray: '4' },
+                  color: (opacity = 1) => `rgba(27,94,32,${opacity})`,
+                  labelColor: (opacity = 1) => `rgba(27,94,32,${opacity})`,
+                  propsForDots: { r: '4', strokeWidth: '2', stroke: CATENA_COLORS.background, pointerEvents: 'auto' },
+                  propsForBackgroundLines: { stroke: CATENA_COLORS.border, strokeDasharray: '4' },
                   propsForLabels: { fontWeight: 'bold', fontSize: 14 },
                   style: { borderRadius: 18 },
-                  fillShadowGradient: '#000',
+                  fillShadowGradient: CATENA_COLORS.primary,
                   fillShadowGradientOpacity: 0.04,
                 }}
                 bezier
@@ -755,10 +822,10 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
                   let color = '';
                   if (catenaSalesData[index] === value) {
                     series = 'Sales';
-                    color = '#1976d2';
+                    color = CATENA_COLORS.primary;
                   } else if (catenaExpensesData[index] === value) {
                     series = 'Expenses';
-                    color = '#e53935';
+                    color = CATENA_COLORS.accent;
                   }
                   setPointTooltip({
                     x,
@@ -772,69 +839,69 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               />
               {/* Per-point Tooltip Box as overlay */}
               {pointTooltip && (
-                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: '#fff', borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: '#eee' }}>
-                  <MaterialCommunityIcons name="close" size={20} color="#222" onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
-                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? '#1976d2' : '#e53935', marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
-                  <Text style={{ fontSize: 15, color: '#222', fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
-                  <Text style={{ fontSize: 13, color: '#888', marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
+                <View style={{ position: 'absolute', left: pointTooltip.x - 80, top: pointTooltip.y - 90, backgroundColor: CATENA_COLORS.background, borderRadius: 12, padding: 16, minWidth: 140, minHeight: 70, shadowColor: '#000', shadowOpacity: 0.10, shadowRadius: 6, elevation: 3, zIndex: 20, alignItems: 'flex-start', borderWidth: 1, borderColor: CATENA_COLORS.border }}>
+                  <MaterialCommunityIcons name="close" size={20} color={CATENA_COLORS.text} onPress={() => setPointTooltip(null)} style={{ position: 'absolute', top: 8, right: 8 }} />
+                  <Text style={{ fontWeight: 'bold', fontSize: 16, color: pointTooltip.series === 'Sales' ? CATENA_COLORS.primary : CATENA_COLORS.accent, marginBottom: 4, marginTop: 8, textAlign: 'left' }}>{pointTooltip.series}</Text>
+                  <Text style={{ fontSize: 15, color: CATENA_COLORS.text, fontWeight: 'bold', textAlign: 'left' }}>₹{pointTooltip.value}</Text>
+                  <Text style={{ fontSize: 13, color: CATENA_COLORS.textLight, marginTop: 2, textAlign: 'left' }}>{pointTooltip.label}</Text>
                 </View>
               )}
             </View>
             {/* Custom Legend */}
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 18, gap: 32 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#222', marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: '#222', opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
-                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: '#222', fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: CATENA_COLORS.primary, marginRight: 6, borderWidth: selectedSeries === 'sales' ? 2 : 0, borderColor: CATENA_COLORS.primary, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'sales' ? null : 'sales')} style={{ color: CATENA_COLORS.primary, fontWeight: selectedSeries === 'sales' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'sales' ? 1 : 0.5 }}>Sales</Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 32 }}>
-                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#888', marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: '#888', opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
-                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: '#888', fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
+                <View onTouchEnd={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: CATENA_COLORS.accent, marginRight: 6, borderWidth: selectedSeries === 'expenses' ? 2 : 0, borderColor: CATENA_COLORS.accent, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.3 }} />
+                <Text onPress={() => setSelectedSeries(selectedSeries === 'expenses' ? null : 'expenses')} style={{ color: CATENA_COLORS.accent, fontWeight: selectedSeries === 'expenses' ? 'bold' : 'normal', fontSize: 15, opacity: selectedSeries === null || selectedSeries === 'expenses' ? 1 : 0.5 }}>Expenses</Text>
               </View>
             </View>
           </View>
           {/* Section Header for Summary */}
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: CATENA_COLORS.primary, marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-sales-report')}>
-              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodaySales}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push('/catena-cafe-sales-report')}>
+              <MaterialCommunityIcons name="cash" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>₹{catenaTodaySales}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Today&apos;s Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expense-report')}>
-              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodayExpenses}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push('/catena-cafe-expense-report')}>
+              <MaterialCommunityIcons name="bank" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>₹{catenaTodayExpenses}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Today&apos;s Expenses</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-vendors')}>
-              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaVendorCount}</Text>
-              <Text style={summaryStyles.label}>Vendors</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push('/catena-cafe-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>{catenaVendorCount}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Vendors</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/catena-raw-materials' })}>
-              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
-              <Text style={summaryStyles.label}>Raw Materials</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push({ pathname: '/catena-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>Raw Materials</Text>
+              <Text style={[catenaSummaryStyles.label]}>Raw Materials</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-foodbill-report')}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={summaryStyles.label}>Food Bill</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push('/catena-cafe-foodbill-report')}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>Food Bill</Text>
+              <Text style={[catenaSummaryStyles.label]}>Food Bill</Text>
             </TouchableOpacity>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaOpenMaintCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            <View style={[catenaSummaryStyles.card]}>
+              <MaterialCommunityIcons name="wrench" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>{catenaOpenMaintCount}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Open Maintenance</Text>
             </View>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPaidPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            <View style={[catenaSummaryStyles.card]}>
+              <MaterialCommunityIcons name="check-circle" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>{catenaPaidPayments}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Payments Paid</Text>
             </View>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-payments-pending')}>
-              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPendingPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Pending</Text>
+            <TouchableOpacity style={[catenaSummaryStyles.card]} onPress={() => router.push('/catena-cafe-payments-pending')}>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={CATENA_COLORS.primary} />
+              <Text style={[catenaSummaryStyles.value]}>{catenaPendingPayments}</Text>
+              <Text style={[catenaSummaryStyles.label]}>Payments Pending</Text>
             </TouchableOpacity>
           </View>
         </>

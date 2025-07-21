@@ -6,8 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, RadioButton, Text, TextInput } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#e0a86b';
-const SECONDARY_COLOR = '#e2af7a';
+const PRIMARY_BROWN = '#8D6748';
+const SECONDARY_BROWN = '#CBB292';
 
 const ROOM_NUMBERS = [
   ...Array.from({ length: 8 }, (_, i) => 301 + i),
@@ -112,7 +112,7 @@ export default function OjasRooms() {
         {ROOM_NUMBERS.map(roomNo => (
           <TouchableOpacity
             key={roomNo.toString()}
-            style={[styles.roomBox, { borderColor: roomStatus(roomNo) === 'active' ? 'green' : 'red' }]}
+            style={[styles.roomBox, { borderColor: roomStatus(roomNo) === 'active' ? PRIMARY_BROWN : 'red' }]}
             onPress={() => openRoom(roomNo.toString())}
           >
             <Text style={styles.roomNo}>Room {roomNo}</Text>
@@ -230,7 +230,7 @@ export default function OjasRooms() {
               <>
                 <View style={styles.guestCard}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <MaterialCommunityIcons name="account" size={22} color={PRIMARY_COLOR} style={{ marginRight: 6 }} />
+                    <MaterialCommunityIcons name="account" size={22} color={PRIMARY_BROWN} style={{ marginRight: 6 }} />
                     <Text style={styles.guestHeader}>Guest Details</Text>
                   </View>
                   <View style={styles.guestDivider} />
@@ -242,7 +242,7 @@ export default function OjasRooms() {
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Check-out</Text>
                     <TouchableOpacity onPress={() => setShowCheckoutPicker(true)}>
-                      <Text style={[styles.guestValue, { textDecorationLine: 'underline', color: PRIMARY_COLOR }]}>{checkout ? checkout.toISOString().split('T')[0] : guest(selectedRoom!).checkout}</Text>
+                      <Text style={[styles.guestValue, { textDecorationLine: 'underline', color: PRIMARY_BROWN }]}>{checkout ? checkout.toISOString().split('T')[0] : guest(selectedRoom!).checkout}</Text>
                     </TouchableOpacity>
                   </View>
                   {showCheckoutPicker && (
@@ -293,7 +293,7 @@ export default function OjasRooms() {
                 {rooms[selectedRoom!]?.foodBills && rooms[selectedRoom!].foodBills.length > 0 && (
                   <View style={styles.foodBillCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <MaterialCommunityIcons name="silverware-fork-knife" size={22} color={PRIMARY_COLOR} style={{ marginRight: 6 }} />
+                      <MaterialCommunityIcons name="silverware-fork-knife" size={22} color={PRIMARY_BROWN} style={{ marginRight: 6 }} />
                       <Text style={styles.foodBillHeader}>Food Bill</Text>
                     </View>
                     <View style={styles.foodBillDivider} />
@@ -324,13 +324,13 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: SECONDARY_BROWN,
     minHeight: '100%',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: PRIMARY_COLOR,
+    color: '#111',
     marginBottom: 18,
     marginTop: 12,
   },
@@ -349,16 +349,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     margin: 6,
-    shadowColor: '#000',
+    shadowColor: PRIMARY_BROWN,
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
+    borderColor: PRIMARY_BROWN,
   },
   roomNo: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 6,
-    color: '#333',
+    color: '#111',
   },
   modalOverlay: {
     flex: 1,
@@ -377,17 +378,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 18,
-    color: PRIMARY_COLOR,
+    color: '#111',
   },
   input: {
     width: 240,
     marginBottom: 12,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    borderColor: PRIMARY_BROWN,
+    borderWidth: 1,
+    color: '#111',
   },
   actionBtn: {
     marginTop: 10,
     borderRadius: 8,
-    backgroundColor: PRIMARY_COLOR,
+    backgroundColor: PRIMARY_BROWN,
   },
   foodBillCard: {
     backgroundColor: '#fff8e1',
@@ -395,22 +399,22 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 18,
     marginBottom: 8,
-    shadowColor: '#e0a86b',
+    shadowColor: PRIMARY_BROWN,
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#e0a86b',
+    borderColor: PRIMARY_BROWN,
   },
   foodBillHeader: {
     fontWeight: 'bold',
     fontSize: 17,
-    color: PRIMARY_COLOR,
+    color: PRIMARY_BROWN,
     letterSpacing: 0.5,
   },
   foodBillDivider: {
     height: 1,
-    backgroundColor: '#e0a86b33',
+    backgroundColor: PRIMARY_BROWN,
     marginVertical: 8,
     borderRadius: 1,
   },
@@ -421,17 +425,17 @@ const styles = StyleSheet.create({
   },
   foodBillItem: {
     fontSize: 15,
-    color: '#222',
+    color: '#111',
   },
   foodBillAmount: {
     fontSize: 15,
-    color: PRIMARY_COLOR,
+    color: PRIMARY_BROWN,
     fontWeight: 'bold',
   },
   foodBillTotal: {
     marginTop: 8,
     fontWeight: 'bold',
-    color: PRIMARY_COLOR,
+    color: PRIMARY_BROWN,
     fontSize: 16,
     alignSelf: 'flex-end',
   },
@@ -441,22 +445,22 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 10,
     marginBottom: 8,
-    shadowColor: '#e0a86b',
+    shadowColor: PRIMARY_BROWN,
     shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#e0a86b',
+    borderColor: PRIMARY_BROWN,
   },
   guestHeader: {
     fontWeight: 'bold',
     fontSize: 17,
-    color: PRIMARY_COLOR,
+    color: PRIMARY_BROWN,
     letterSpacing: 0.5,
   },
   guestDivider: {
     height: 1,
-    backgroundColor: '#e0a86b33',
+    backgroundColor: PRIMARY_BROWN,
     marginVertical: 8,
     borderRadius: 1,
   },
@@ -467,7 +471,7 @@ const styles = StyleSheet.create({
   },
   guestLabel: {
     fontSize: 15,
-    color: '#222',
+    color: '#111',
     fontWeight: '500',
   },
   guestValue: {
@@ -476,7 +480,7 @@ const styles = StyleSheet.create({
   },
   guestAmount: {
     fontSize: 15,
-    color: PRIMARY_COLOR,
+    color: PRIMARY_BROWN,
     fontWeight: 'bold',
   },
   guestStatus: {

@@ -180,7 +180,7 @@ export default function HotelOjasScreen() {
           <MaterialCommunityIcons
             name="plus-circle"
             size={36}
-            color="#1976d2"
+            color="#fff"
             style={styles.iconButton}
             onPress={() => setModalVisible(true)}
           />
@@ -315,7 +315,7 @@ export default function HotelOjasScreen() {
                 value={rawDate ? rawDate.toISOString().split('T')[0] : ''}
                 editable={false}
                 pointerEvents="none"
-                style={{ backgroundColor: '#f9f9f9' }}
+                style={{ backgroundColor: '#fff' }}
               />
             </TouchableOpacity>
             {showRawDatePicker && (
@@ -356,9 +356,11 @@ export default function HotelOjasScreen() {
   );
 } 
 
+const PRIMARY_BROWN = '#8D6748';
+const SECONDARY_BROWN = '#CBB292';
 const styles = StyleSheet.create({
   appbar: {
-    backgroundColor: '#63b3ed', // sky blue
+    backgroundColor: PRIMARY_BROWN,
     elevation: 4,
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,7 +369,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: '#fff',
+    color: '#111',
     fontWeight: 'bold',
     fontSize: 22,
     position: 'absolute',
@@ -386,7 +388,7 @@ const styles = StyleSheet.create({
   iconButton: {},
   modalScroll: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: SECONDARY_BROWN,
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -401,29 +403,34 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#111',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 18,
     marginBottom: 6,
+    color: '#111',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: PRIMARY_BROWN,
     width: '100%',
     marginBottom: 12,
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    color: '#111',
   },
   picker: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     marginBottom: 12,
     borderRadius: 6,
+    borderColor: PRIMARY_BROWN,
+    borderWidth: 1,
   },
   saveBtn: {
     marginBottom: 16,
-    backgroundColor: '#1976d2',
+    backgroundColor: PRIMARY_BROWN,
   },
 }); 

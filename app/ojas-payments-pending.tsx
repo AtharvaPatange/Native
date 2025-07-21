@@ -151,26 +151,26 @@ export default function OjasPaymentsPending() {
       )}
       {/* Custom Table Header */}
       <View style={{ flexDirection: 'row', backgroundColor: '#eee', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Amount</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Amount</Text>
         <Text style={{ width: 16 }}> </Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Type</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Status</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>View</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Type</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Status</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>View</Text>
       </View>
       {/* Custom Table Rows */}
       {payments.map(p => (
         <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 }}>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.cash || p.amount || 0}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{p.cash || p.amount || 0}</Text>
           <Text style={{ width: 16 }}> </Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.type || '-'}</Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.status}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{p.type || '-'}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{p.status}</Text>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Button mode="outlined" compact onPress={() => { setSelected(p); setStatus(p.status); setModalVisible(true); }}>View</Button>
           </View>
         </View>
       ))}
       <Button mode="text" onPress={() => router.back()} style={{ marginTop: 16 }}>Back</Button>
-      <Button mode="contained" onPress={handleDownloadReport} style={{ marginTop: 8, backgroundColor: '#1976d2' }}>
+      <Button mode="contained" onPress={handleDownloadReport} style={{ marginTop: 8, backgroundColor: '#8D6748' }}>
         Download Report
       </Button>
       <Portal>
@@ -179,11 +179,11 @@ export default function OjasPaymentsPending() {
           <Dialog.Content>
             {selected && (
               <>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Created By:</Text> {selected.createdBy || '-'}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Amount:</Text> ₹{selected.cash || selected.amount || 0}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Type:</Text> {selected.type || '-'}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Status:</Text> {selected.status}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Date:</Text> {formatDate(selected.createdAt)}</Paragraph>
+                <Paragraph><Text style={{ fontWeight: 'bold', color: '#111' }}>Created By:</Text> {selected.createdBy || '-'}</Paragraph>
+                <Paragraph><Text style={{ fontWeight: 'bold', color: '#111' }}>Amount:</Text> ₹{selected.cash || selected.amount || 0}</Paragraph>
+                <Paragraph><Text style={{ fontWeight: 'bold', color: '#111' }}>Type:</Text> {selected.type || '-'}</Paragraph>
+                <Paragraph><Text style={{ fontWeight: 'bold', color: '#111' }}>Status:</Text> {selected.status}</Paragraph>
+                <Paragraph><Text style={{ fontWeight: 'bold', color: '#111' }}>Date:</Text> {formatDate(selected.createdAt)}</Paragraph>
               </>
             )}
             <RadioButton.Group onValueChange={setStatus} value={status}>
@@ -201,7 +201,12 @@ export default function OjasPaymentsPending() {
   );
 }
 
+const PRIMARY_BROWN = '#8D6748';
+const SECONDARY_BROWN = '#CBB292';
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6fa', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#1976d2', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: SECONDARY_BROWN, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
+  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_BROWN, color: '#fff' },
+  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_BROWN },
 }); 

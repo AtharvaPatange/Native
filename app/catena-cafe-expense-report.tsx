@@ -116,21 +116,21 @@ export default function CatenaCafeExpenseReport() {
       )}
       {/* Custom Table Header */}
       <View style={{ flexDirection: 'row', backgroundColor: '#eee', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Date</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Status</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Type</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Cash</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Date</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Status</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Type</Text>
+        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Cash</Text>
       </View>
       {/* Custom Table Rows */}
       {expenses.map(e => (
         <View key={e.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 }}>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{formatDate(e.createdAt)}</Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{e.status || ''}</Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{e.type || ''}</Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{e.cash || 0}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{formatDate(e.createdAt)}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{e.status || ''}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{e.type || ''}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{e.cash || 0}</Text>
         </View>
       ))}
-      <Button mode="contained" onPress={handleDownloadPDF} style={{ marginTop: 24, backgroundColor: '#43a047' }} loading={loading} disabled={loading || expenses.length === 0}>
+      <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || expenses.length === 0}>
         Download PDF
       </Button>
       <Button mode="text" onPress={() => router.back()} style={{ marginTop: 16 }}>Back</Button>
@@ -138,9 +138,13 @@ export default function CatenaCafeExpenseReport() {
   );
 }
 
+const PRIMARY_GREEN = '#A8E6A3';
+const SECONDARY_GREEN = '#E8FCEB';
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6fa', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#43a047', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: SECONDARY_GREEN, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
-  dateBtn: { flex: 1, marginHorizontal: 4 },
+  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_GREEN, color: '#111' },
+  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_GREEN },
 }); 

@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#1976d2';
-const SECONDARY_COLOR = '#63b3ed';
+const PRIMARY_GREEN = '#A8E6A3';
+const SECONDARY_GREEN = '#E8FCEB';
 
 export default function CatenaCafeVendors() {
   const [maintenanceVendors, setMaintenanceVendors] = useState<any[]>([]);
@@ -123,7 +123,7 @@ export default function CatenaCafeVendors() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f6fa' }}>
+    <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text style={styles.title}>Maintenance Vendors</Text>
         {loading ? <ActivityIndicator /> : (
@@ -191,11 +191,12 @@ function CommonVendorTable({ data }: { data: any[] }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: PRIMARY_COLOR },
-  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_COLOR },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: SECONDARY_COLOR, paddingBottom: 4, backgroundColor: SECONDARY_COLOR },
+  container: { flex: 1, backgroundColor: SECONDARY_GREEN, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
+  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_GREEN },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: PRIMARY_GREEN, paddingBottom: 4, backgroundColor: PRIMARY_GREEN },
   tableHeaderCell: { flex: 1, fontWeight: 'bold', color: '#111', fontSize: 13 },
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 4 },
-  tableCell: { flex: 1, color: '#222', fontSize: 13 },
-  pdfBtn: { marginVertical: 8, alignSelf: 'flex-end' },
+  tableCell: { flex: 1, color: '#111', fontSize: 13 },
+  pdfBtn: { marginVertical: 8, alignSelf: 'flex-end', backgroundColor: PRIMARY_GREEN },
 }); 

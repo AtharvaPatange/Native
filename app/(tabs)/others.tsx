@@ -159,19 +159,19 @@ export default function OthersScreen() {
           ) : (
             <DataTable>
               <DataTable.Header>
-                <DataTable.Title>Where Paid</DataTable.Title>
-                <DataTable.Title numeric>Amount</DataTable.Title>
+                <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Where Paid</Text></DataTable.Title>
+                <DataTable.Title numeric><Text style={{ color: '#111', fontWeight: 'bold' }}>Amount</Text></DataTable.Title>
                 <DataTable.Title style={{ width: 32 }}> </DataTable.Title>
-                <DataTable.Title>Date</DataTable.Title>
+                <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Date</Text></DataTable.Title>
               </DataTable.Header>
 
               {transactions.map((transaction) => (
                 <DataTable.Row key={transaction.id}>
-                  <DataTable.Cell>{transaction.wherePaid}</DataTable.Cell>
-                  <DataTable.Cell numeric>₹{transaction.amount}</DataTable.Cell>
+                  <DataTable.Cell><Text style={{ color: '#111' }}>{transaction.wherePaid}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric><Text style={{ color: '#111' }}>₹{transaction.amount}</Text></DataTable.Cell>
                   {/* Spacer between Amount and Date */}
                   <View style={{ width: 32 }} />
-                  <DataTable.Cell>{transaction.date}</DataTable.Cell>
+                  <DataTable.Cell><Text style={{ color: '#111' }}>{transaction.date}</Text></DataTable.Cell>
                 </DataTable.Row>
               ))}
             </DataTable>
@@ -298,19 +298,19 @@ const styles = StyleSheet.create({
   accessDeniedTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#111',
     marginTop: 16,
     marginBottom: 8,
   },
   accessDeniedMessage: {
     fontSize: 16,
-    color: '#fff',
+    color: '#111',
     textAlign: 'center',
     marginBottom: 8,
   },
   accessDeniedSubMessage: {
     fontSize: 14,
-    color: '#fff',
+    color: '#111',
     opacity: 0.8,
     textAlign: 'center',
   },
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#111',
     flex: 1,
   },
   iconButtonWrapper: {
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: '#333',
+    color: '#111',
   },
   emptyState: {
     alignItems: 'center',
@@ -358,12 +358,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#666',
+    color: '#111',
     marginTop: 8,
   },
   emptySubText: {
     fontSize: 14,
-    color: '#999',
+    color: '#111',
     textAlign: 'center',
     marginTop: 4,
   },
@@ -393,13 +393,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 24,
     textAlign: 'center',
-    color: '#333',
+    color: '#111',
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
+    color: '#111',
   },
   input: {
     marginBottom: 16,
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   },
   dateTimeButtonText: {
     fontSize: 16,
-    color: '#333',
+    color: '#111',
   },
   saveButton: {
     marginTop: 16,

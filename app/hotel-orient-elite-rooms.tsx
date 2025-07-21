@@ -29,10 +29,8 @@ export default function HotelOrientEliteRooms() {
   const [time, setTime] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('pending');
-
-  // Food bill state
-  const [showFoodBill, setShowFoodBill] = useState(false);
-  const [foodItems, setFoodItems] = useState([{ name: '', amount: '' }]);
+  // Add advance state for guest form
+  const [advance, setAdvance] = useState('');
 
   // Fetch all rooms
   useEffect(() => {
@@ -65,6 +63,7 @@ export default function HotelOrientEliteRooms() {
         checkout: checkout.toISOString().split('T')[0],
         time: time || null,
         amount: Number(amount),
+        advance: advance !== '' ? Number(advance) : 0,
         paymentStatus,
       },
     });
@@ -74,6 +73,7 @@ export default function HotelOrientEliteRooms() {
     setCheckout(null);
     setTime('');
     setAmount('');
+    setAdvance('');
     setPaymentStatus('pending');
   };
 
@@ -85,23 +85,6 @@ export default function HotelOrientEliteRooms() {
     setModalVisible(false);
   };
 
-  const handleAddFoodItem = () => setFoodItems([...foodItems, { name: '', amount: '' }]);
-  const handleFoodItemChange = (idx: number, field: 'name' | 'amount', value: string) => {
-    setFoodItems(items => items.map((item, i) => i === idx ? { ...item, [field]: value } : item));
-  };
-  const handleSaveFoodBill = async () => {
-    if (!selectedRoom || foodItems.some(item => !item.name || !item.amount)) {
-      Alert.alert('Error', 'Please fill all food item fields');
-      return;
-    }
-    await setDoc(doc(db, 'orientEliteRooms', selectedRoom), {
-      foodBills: foodItems.map(item => ({ name: item.name, amount: Number(item.amount) })),
-    }, { merge: true });
-    setShowFoodBill(false);
-    setFoodItems([{ name: '', amount: '' }]);
-    Alert.alert('Success', 'Food bill saved!');
-  };
-
   const roomStatus = (roomNo: string) => rooms[roomNo]?.status || 'inactive';
   const guest = (roomNo: string) => rooms[roomNo]?.guest;
 
@@ -109,20 +92,25 @@ export default function HotelOrientEliteRooms() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Hotel Orient Elite Rooms</Text>
       <View style={styles.grid}>
-        {ROOM_NUMBERS.map(roomNo => (
-          <TouchableOpacity
-            key={roomNo.toString()}
-            style={[styles.roomBox, { borderColor: roomStatus(roomNo) === 'active' ? 'green' : 'red' }]}
-            onPress={() => openRoom(roomNo.toString())}
-          >
-            <Text style={styles.roomNo}>Room {roomNo}</Text>
-            <MaterialCommunityIcons
-              name={roomStatus(roomNo) === 'active' ? 'check-circle' : 'close-circle'}
-              size={28}
-              color={roomStatus(roomNo) === 'active' ? 'green' : 'red'}
-            />
-          </TouchableOpacity>
-        ))}
+        {ROOM_NUMBERS.map(roomNo => {
+          const status = roomStatus(roomNo);
+          const isBooked = status === 'active';
+          return (
+            <TouchableOpacity
+              key={roomNo.toString()}
+              style={[
+                styles.roomBox,
+                isBooked
+                  ? { backgroundColor: 'green', borderColor: 'green' }
+                  : { backgroundColor: '#fff', borderColor: '#ccc' },
+              ]}
+              onPress={() => openRoom(roomNo.toString())}
+            >
+              <Text style={styles.roomNo}>Room {roomNo}</Text>
+              {/* No icon for either vacant or booked rooms */}
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <Modal
         visible={modalVisible}
@@ -141,11 +129,6 @@ export default function HotelOrientEliteRooms() {
                 {guest(selectedRoom!) && (
                   <Button mode="contained" style={styles.actionBtn} onPress={() => setShowUpdate(true)}>
                     Update Guest Status
-                  </Button>
-                )}
-                {!showFoodBill && roomStatus(selectedRoom!) === 'active' && (
-                  <Button mode="contained" style={styles.actionBtn} onPress={() => setShowFoodBill(true)}>
-                    Food Bill
                   </Button>
                 )}
                 <Button mode="text" onPress={() => setModalVisible(false)} style={{ marginTop: 8 }}>Close</Button>
@@ -202,33 +185,9 @@ export default function HotelOrientEliteRooms() {
                     <RadioButton value="pending" /><Text style={{ marginLeft: 16 }}>Pending</Text>
                   </View>
                 </RadioButton.Group>
+                <TextInput label="Advance Paid (₹)" value={advance} onChangeText={setAdvance} style={styles.input} keyboardType="numeric" />
                 <Button mode="contained" style={styles.actionBtn} onPress={handleAddGuest}>Save Guest</Button>
                 <Button mode="text" onPress={() => setShowAddGuest(false)} style={{ marginTop: 8 }}>Cancel</Button>
-              </>
-            )}
-            {showFoodBill && (
-              <>
-                <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Add Food Bill</Text>
-                {foodItems.map((item, idx) => (
-                  <View key={String(idx)} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <TextInput
-                      placeholder="Food Item"
-                      value={item.name}
-                      onChangeText={v => handleFoodItemChange(idx, 'name', v)}
-                      style={[styles.input, { flex: 2, marginRight: 8 }]}
-                    />
-                    <TextInput
-                      placeholder="Amount"
-                      value={item.amount}
-                      onChangeText={v => handleFoodItemChange(idx, 'amount', v)}
-                      keyboardType="numeric"
-                      style={[styles.input, { flex: 1 }]}
-                    />
-                  </View>
-                ))}
-                <Button mode="outlined" onPress={handleAddFoodItem} style={{ marginBottom: 8 }}>Add New Food Item</Button>
-                <Button mode="contained" onPress={handleSaveFoodBill} style={styles.actionBtn}>Save Food Bill</Button>
-                <Button mode="text" onPress={() => setShowFoodBill(false)} style={{ marginTop: 8 }}>Cancel</Button>
               </>
             )}
             {showUpdate && selectedRoom && guest(selectedRoom) && (
@@ -269,6 +228,29 @@ export default function HotelOrientEliteRooms() {
                     <Text style={styles.guestLabel}>Amount</Text>
                     <Text style={styles.guestAmount}>₹{guest(selectedRoom).amount}</Text>
                   </View>
+                  {/* Package Section */}
+                  <View style={[styles.guestRow, { marginTop: 12, marginBottom: 4 }]}>
+                    <Text style={[styles.guestLabel, { fontWeight: 'bold' }]}>Package</Text>
+                  </View>
+                  <View style={styles.guestRow}>
+                    <Text style={styles.guestLabel}>Total Amount</Text>
+                    <Text style={styles.guestValue}>₹{guest(selectedRoom).amount || 0}</Text>
+                  </View>
+                  <View style={styles.guestRow}>
+                    <Text style={styles.guestLabel}>Advance Paid</Text>
+                    <TextInput
+                      value={advance !== '' ? advance : (guest(selectedRoom).advance !== undefined ? String(guest(selectedRoom).advance) : '')}
+                      onChangeText={setAdvance}
+                      style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.guestRow}>
+                    <Text style={styles.guestLabel}>Pending Amount</Text>
+                    <Text style={styles.guestValue}>
+                      ₹{(guest(selectedRoom).amount || 0) - (advance !== '' ? Number(advance) : (guest(selectedRoom).advance || 0))}
+                    </Text>
+                  </View>
                   {/* Editable Payment Status */}
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Payment Status</Text>
@@ -283,39 +265,18 @@ export default function HotelOrientEliteRooms() {
                     </RadioButton.Group>
                   </View>
                   <Button mode="contained" style={styles.actionBtn} onPress={async () => {
-                    // Save changes to checkout and payment status
+                    // Save changes to checkout, advance, and payment status
                     await setDoc(doc(db, 'orientEliteRooms', selectedRoom), {
                       guest: {
                         ...guest(selectedRoom),
                         checkout: checkout ? checkout.toISOString().split('T')[0] : guest(selectedRoom).checkout,
+                        advance: advance !== '' ? Number(advance) : (guest(selectedRoom).advance || 0),
                         paymentStatus,
                       },
                     }, { merge: true });
                     Alert.alert('Success', 'Guest details updated!');
                   }}>Save Changes</Button>
                 </View>
-                {/* Food Bill Section */}
-                {rooms[selectedRoom].foodBills && (
-                  <View style={styles.foodBillCard}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                      <MaterialCommunityIcons name="silverware-fork-knife" size={22} color={PRIMARY_COLOR} style={{ marginRight: 6 }} />
-                      <Text style={styles.foodBillHeader}>Food Bill</Text>
-                    </View>
-                    <View style={styles.foodBillDivider} />
-                    {rooms[selectedRoom].foodBills.map((item: any, idx: number) => (
-                      <View key={String(idx)} style={styles.foodBillRow}>
-                        <Text style={styles.foodBillItem}>{item.name}</Text>
-                        <Text style={styles.foodBillAmount}>₹{item.amount}</Text>
-                      </View>
-                    ))}
-                    <View style={styles.foodBillDivider} />
-                    <Text style={styles.foodBillTotal}>
-                      Total: ₹{rooms[selectedRoom].foodBills.reduce((sum: number, i: any): number => sum + (typeof i.amount === 'number' ? i.amount : Number(i.amount) || 0), 0)}
-                    </Text>
-                  </View>
-                )}
-                <Button mode="contained" style={styles.actionBtn} onPress={handleSetInactive}>Set Room Inactive</Button>
-                <Button mode="text" onPress={() => setShowUpdate(false)} style={{ marginTop: 8 }}>Cancel</Button>
               </>
             )}
           </View>

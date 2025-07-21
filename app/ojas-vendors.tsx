@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#1976d2';
-const SECONDARY_COLOR = '#63b3ed';
+const PRIMARY_BROWN = '#8D6748';
+const SECONDARY_BROWN = '#CBB292';
 
 export default function OjasVendors() {
   const [maintenanceVendors, setMaintenanceVendors] = useState<any[]>([]);
@@ -191,11 +191,11 @@ function CommonVendorTable({ data }: { data: any[] }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: PRIMARY_COLOR },
-  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_COLOR },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: SECONDARY_COLOR, paddingBottom: 4, backgroundColor: SECONDARY_COLOR },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111' },
+  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_BROWN },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: SECONDARY_BROWN, paddingBottom: 4, backgroundColor: SECONDARY_BROWN },
   tableHeaderCell: { flex: 1, fontWeight: 'bold', color: '#111', fontSize: 13 },
   tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 4 },
-  tableCell: { flex: 1, color: '#222', fontSize: 13 },
-  pdfBtn: { marginVertical: 8, alignSelf: 'flex-end' },
+  tableCell: { flex: 1, color: '#111', fontSize: 13 },
+  pdfBtn: { marginVertical: 8, alignSelf: 'flex-end', backgroundColor: PRIMARY_BROWN },
 }); 

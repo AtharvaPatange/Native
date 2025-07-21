@@ -180,7 +180,7 @@ export default function CatenaCafeScreen() {
           <MaterialCommunityIcons
             name="plus-circle"
             size={36}
-            color="#1976d2"
+            color="#111"
             style={styles.iconButton}
             onPress={() => setModalVisible(true)}
           />
@@ -356,9 +356,11 @@ export default function CatenaCafeScreen() {
   );
 } 
 
+const PRIMARY_GREEN = '#A8E6A3';
+const SECONDARY_GREEN = '#E8FCEB';
 const styles = StyleSheet.create({
   appbar: {
-    backgroundColor: '#63b3ed', // sky blue
+    backgroundColor: PRIMARY_GREEN,
     elevation: 4,
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,7 +369,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    color: '#fff',
+    color: '#111',
     fontWeight: 'bold',
     fontSize: 22,
     position: 'absolute',
@@ -386,7 +388,7 @@ const styles = StyleSheet.create({
   iconButton: {},
   modalScroll: {
     flex: 1,
-    backgroundColor: '#f5f6fa',
+    backgroundColor: SECONDARY_GREEN,
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -401,29 +403,60 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+    color: '#111',
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginTop: 18,
-    marginBottom: 6,
+    marginBottom: 12,
+    color: '#111',
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: PRIMARY_GREEN,
     width: '100%',
     marginBottom: 12,
     padding: 8,
     borderRadius: 6,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
+    color: '#111',
   },
   picker: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#fff',
     marginBottom: 12,
     borderRadius: 6,
   },
   saveBtn: {
     marginBottom: 16,
-    backgroundColor: '#1976d2',
+    backgroundColor: PRIMARY_GREEN,
+    color: '#111',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: SECONDARY_GREEN,
+    padding: 16,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#111',
+    marginBottom: 18,
+    marginTop: 12,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: PRIMARY_GREEN,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  button: {
+    backgroundColor: PRIMARY_GREEN,
+    color: '#111',
+    borderRadius: 8,
+    marginTop: 8,
   },
 }); 

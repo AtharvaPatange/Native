@@ -201,7 +201,12 @@ export default function CatenaCafePaymentsPending() {
   );
 }
 
+const PRIMARY_GREEN = '#A8E6A3';
+const SECONDARY_GREEN = '#E8FCEB';
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6fa', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#43a047', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: SECONDARY_GREEN, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
+  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_GREEN, color: '#111' },
+  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_GREEN },
 }); 

@@ -123,10 +123,12 @@ export default function OjasSalesReport() {
   );
 }
 
+const PRIMARY_BROWN = '#8D6748';
+const SECONDARY_BROWN = '#CBB292';
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6fa', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#1976d2', textAlign: 'center' },
+  container: { flex: 1, backgroundColor: SECONDARY_BROWN, padding: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
-  dateBtn: { flex: 1, marginHorizontal: 4 },
-  downloadBtn: { marginTop: 24, backgroundColor: '#1976d2' },
+  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_BROWN, color: '#fff' },
+  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_BROWN },
 }); 

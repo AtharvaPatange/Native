@@ -159,19 +159,16 @@ export default function OthersScreen() {
           ) : (
             <DataTable>
               <DataTable.Header>
-                <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Where Paid</Text></DataTable.Title>
-                <DataTable.Title numeric><Text style={{ color: '#111', fontWeight: 'bold' }}>Amount</Text></DataTable.Title>
-                <DataTable.Title style={{ width: 32 }}> </DataTable.Title>
-                <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Date</Text></DataTable.Title>
+                <DataTable.Title style={{ flex: 2 }}><Text style={{ color: '#111', fontWeight: 'bold' }}>Where Paid</Text></DataTable.Title>
+                <DataTable.Title numeric style={{ flex: 1 }}><Text style={{ color: '#111', fontWeight: 'bold' }}>Amount</Text></DataTable.Title>
+                <DataTable.Title style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: '#111', fontWeight: 'bold', textAlign: 'center' }}>Date</Text></DataTable.Title>
               </DataTable.Header>
 
               {transactions.map((transaction) => (
                 <DataTable.Row key={transaction.id}>
-                  <DataTable.Cell><Text style={{ color: '#111' }}>{transaction.wherePaid}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric><Text style={{ color: '#111' }}>₹{transaction.amount}</Text></DataTable.Cell>
-                  {/* Spacer between Amount and Date */}
-                  <View style={{ width: 32 }} />
-                  <DataTable.Cell><Text style={{ color: '#111' }}>{transaction.date}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 2 }}><Text style={{ color: '#111', textAlign: 'left' }}>{transaction.wherePaid}</Text></DataTable.Cell>
+                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={{ color: '#111', textAlign: 'right' }}>₹{transaction.amount}</Text></DataTable.Cell>
+                  <DataTable.Cell style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: '#111', textAlign: 'center' }}>{transaction.date}</Text></DataTable.Cell>
                 </DataTable.Row>
               ))}
             </DataTable>

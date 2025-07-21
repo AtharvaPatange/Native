@@ -107,20 +107,24 @@ export default function HotelOrientEliteDormitory() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Dormitory Beds</Text>
       <View style={styles.grid}>
-        {BED_NUMBERS.map(bedNo => (
-          <TouchableOpacity
-            key={bedNo.toString()}
-            style={[styles.roomBox, { borderColor: bedStatus(bedNo) === 'active' ? 'green' : 'red' }]}
-            onPress={() => openBed(bedNo.toString())}
-          >
-            <Text style={styles.roomNo}>Bed {bedNo}</Text>
-            <MaterialCommunityIcons
-              name={bedStatus(bedNo) === 'active' ? 'check-circle' : 'close-circle'}
-              size={28}
-              color={bedStatus(bedNo) === 'active' ? 'green' : 'red'}
-            />
-          </TouchableOpacity>
-        ))}
+        {BED_NUMBERS.map(bedNo => {
+          const occupied = bedStatus(bedNo) === 'active';
+          return (
+            <TouchableOpacity
+              key={bedNo.toString()}
+              style={[
+                styles.roomBox,
+                occupied
+                  ? { backgroundColor: 'green', borderColor: 'green' }
+                  : { backgroundColor: '#fff', borderColor: '#ccc' },
+              ]}
+              onPress={() => openBed(bedNo.toString())}
+            >
+              <Text style={styles.roomNo}>Bed {bedNo}</Text>
+              {/* No icon for either vacant or occupied beds */}
+            </TouchableOpacity>
+          );
+        })}
       </View>
       <Modal visible={modalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>

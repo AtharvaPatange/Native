@@ -128,24 +128,24 @@ export default function HotelOrientEliteExpenseReport() {
       )}
       <DataTable>
         <DataTable.Header>
-          <DataTable.Title>Date</DataTable.Title>
-          <DataTable.Title>Type</DataTable.Title>
-          <DataTable.Title numeric>Amount</DataTable.Title>
-          <DataTable.Title>Status</DataTable.Title>
+          <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Date</Text></DataTable.Title>
+          <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Type</Text></DataTable.Title>
+          <DataTable.Title numeric><Text style={{ color: '#111', fontWeight: 'bold' }}>Amount</Text></DataTable.Title>
+          <DataTable.Title><Text style={{ color: '#111', fontWeight: 'bold' }}>Status</Text></DataTable.Title>
         </DataTable.Header>
         {expenses.map(e => (
           <DataTable.Row key={e.id}>
-            <DataTable.Cell>{formatDate(e.createdAt)}</DataTable.Cell>
-            <DataTable.Cell>{e.type}</DataTable.Cell>
-            <DataTable.Cell numeric style={{ paddingRight: 24 }}>{e.cash}</DataTable.Cell>
-            <DataTable.Cell>{e.status}</DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{formatDate(e.createdAt)}</Text></DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{e.type}</Text></DataTable.Cell>
+            <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{e.cash}</Text></DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{e.status}</Text></DataTable.Cell>
           </DataTable.Row>
         ))}
         <DataTable.Row>
-          <DataTable.Cell>Total</DataTable.Cell>
-          <DataTable.Cell><Text> </Text></DataTable.Cell>
-          <DataTable.Cell numeric style={{ paddingRight: 24 }}>{getTotal()}</DataTable.Cell>
-          <DataTable.Cell><Text> </Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}>Total</Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
+          <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{getTotal()}</Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
         </DataTable.Row>
       </DataTable>
       <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || expenses.length === 0}>

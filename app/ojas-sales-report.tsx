@@ -102,17 +102,17 @@ export default function OjasSalesReport() {
         </DataTable.Header>
         {sales.map(s => (
           <DataTable.Row key={s.id}>
-            <DataTable.Cell>{formatDate(s.createdAt)}</DataTable.Cell>
-            <DataTable.Cell>{s.type}</DataTable.Cell>
-            <DataTable.Cell numeric style={{ paddingRight: 24 }}>{s.cash}</DataTable.Cell>
-            <DataTable.Cell>{s.status}</DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{formatDate(s.createdAt)}</Text></DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{s.type}</Text></DataTable.Cell>
+            <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{s.cash}</Text></DataTable.Cell>
+            <DataTable.Cell><Text style={{ color: '#111' }}>{s.status}</Text></DataTable.Cell>
           </DataTable.Row>
         ))}
         <DataTable.Row>
-          <DataTable.Cell>Total</DataTable.Cell>
-          <DataTable.Cell><Text> </Text></DataTable.Cell>
-          <DataTable.Cell numeric style={{ paddingRight: 24 }}>{getTotal()}</DataTable.Cell>
-          <DataTable.Cell><Text> </Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}>Total</Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
+          <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{getTotal()}</Text></DataTable.Cell>
+          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
         </DataTable.Row>
       </DataTable>
       <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || sales.length === 0}>

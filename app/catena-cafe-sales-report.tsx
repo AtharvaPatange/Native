@@ -115,7 +115,7 @@ export default function CatenaCafeSalesReport() {
         />
       )}
       {/* Custom Table Header */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#eee', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
+      <View style={{ flexDirection: 'row', backgroundColor: '#f8f8f8', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
         <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Date</Text>
         <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Status</Text>
         <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Type</Text>
@@ -123,11 +123,27 @@ export default function CatenaCafeSalesReport() {
       </View>
       {/* Custom Table Rows */}
       {sales.map(s => (
-        <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 }}>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{formatDate(s.createdAt)}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{s.status || ''}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{s.type || ''}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{s.cash || 0}</Text>
+        <View key={s.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8, minHeight: 44 }}>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }} numberOfLines={1} ellipsizeMode="tail">{formatDate(s.createdAt)}</Text>
+          <Text
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              color: s.status === 'done' ? '#207a3c' : s.status === 'pending' ? '#b71c1c' : '#111',
+              backgroundColor: s.status === 'done' ? '#e0f7e9' : s.status === 'pending' ? '#ffebee' : 'transparent',
+              borderRadius: 8,
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              overflow: 'hidden',
+              fontWeight: 'bold',
+            }}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {s.status || ''}
+          </Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }} numberOfLines={1} ellipsizeMode="tail">{s.type || ''}</Text>
+          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }} numberOfLines={1} ellipsizeMode="tail">{s.cash || 0}</Text>
         </View>
       ))}
       <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || sales.length === 0}>

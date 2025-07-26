@@ -14,7 +14,12 @@ const ORIENT_SECONDARY = '#e2af7a';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { userRole } = useAuth();
+  const { userRole, loading } = useAuth();
+
+  // Don't render tabs while loading to prevent flashing
+  if (loading) {
+    return null;
+  }
 
   return (
     <Tabs
@@ -53,10 +58,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="hotel-orient-elite-rooms"
+        name="profile"
         options={{
-          title: 'Orient Elite Rooms',
-          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="bed.double.fill" color={focused ? ORIENT_PRIMARY : ORIENT_SECONDARY} />, // or any suitable icon
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => <IconSymbol size={28} name="person.crop.circle.fill" color={focused ? '#1976d2' : '#888'} />, // user icon
         }}
       />
       {userRole === 'globalAdmin' && (

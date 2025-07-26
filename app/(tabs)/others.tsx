@@ -24,7 +24,7 @@ interface PaymentTransaction {
 }
 
 export default function OthersScreen() {
-  const { user, userRole } = useAuth();
+  const { user, userRole, loading } = useAuth();
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
@@ -37,28 +37,15 @@ export default function OthersScreen() {
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch transactions (move above conditional return)
-  useEffect(() => {
-    const q = query(
-      collection(db, 'paymentTransactions'),
-      orderBy('createdAt', 'desc'),
-      limit(10)
+  // Check if user is global admin FIRST (before any data fetching)
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
     );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const transactionsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-      })) as PaymentTransaction[];
-      
-      setTransactions(transactionsData);
-    });
+  }
 
-    return () => unsubscribe();
-  }, []);
-
-  // Check if user is global admin (after all hooks)
   if (userRole !== 'globalAdmin') {
     return (
       <View style={styles.accessDeniedContainer}>
@@ -82,16 +69,48 @@ export default function OthersScreen() {
     );
   }
 
+  // Only fetch transactions if user is global admin
+  useEffect(() => {
+    if (userRole !== 'globalAdmin') return;
+
+    const q = query(
+      collection(db, 'paymentTransactions'),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const transactionsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+      })) as PaymentTransaction[];
+      
+      setTransactions(transactionsData);
+    }, (error) => {
+      console.error('Error fetching transactions:', error);
+      Alert.alert('Error', 'Failed to load transactions');
+    });
+
+    return () => unsubscribe();
+  }, [userRole]);
+
   const handleAddPayment = async () => {
     if (!wherePaid.trim() || !amount.trim() || !date) {
       Alert.alert('Error', 'Please fill in all required fields (Where Paid, Amount, and Date)');
       return;
     }
 
+    const amountValue = Number(amount);
+    if (isNaN(amountValue) || amountValue <= 0) {
+      Alert.alert('Error', 'Please enter a valid amount');
+      return;
+    }
+
     try {
       const paymentData = {
         wherePaid: wherePaid.trim(),
-        amount: Number(amount),
+        amount: amountValue,
         date: date.toLocaleDateString(),
         time: time.trim() || null,
         notes: notes.trim() || null,
@@ -132,18 +151,19 @@ export default function OthersScreen() {
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         />
-        <Text style={styles.title}>Others - Payment Tracking</Text>
-        <TouchableOpacity
-          style={styles.iconButtonWrapper}
-          onPress={() => setModalVisible(true)}
-        >
-          <MaterialCommunityIcons
-            name="plus-circle"
-            size={36}
-            color="#fff"
-            style={styles.iconButton}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <MaterialCommunityIcons name="cash-multiple" size={24} color="#fff" style={styles.titleIcon} />
+            <Text style={styles.title}>Payment Tracking</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setModalVisible(true)}
+          >
+          
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.container}>
@@ -157,21 +177,38 @@ export default function OthersScreen() {
               <Text style={styles.emptySubText}>Add your first payment transaction using the + button</Text>
             </View>
           ) : (
-            <DataTable>
-              <DataTable.Header>
-                <DataTable.Title style={{ flex: 2 }}><Text style={{ color: '#111', fontWeight: 'bold' }}>Where Paid</Text></DataTable.Title>
-                <DataTable.Title numeric style={{ flex: 1 }}><Text style={{ color: '#111', fontWeight: 'bold' }}>Amount</Text></DataTable.Title>
-                <DataTable.Title style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: '#111', fontWeight: 'bold', textAlign: 'center' }}>Date</Text></DataTable.Title>
-              </DataTable.Header>
+            <View style={styles.tableContainer}>
+              <DataTable>
+                <DataTable.Header style={styles.tableHeader}>
+                  <DataTable.Title style={styles.column}>
+                    <Text style={styles.headerText}>Where Paid</Text>
+                  </DataTable.Title>
+                  <DataTable.Title style={styles.column}>
+                    <Text style={styles.headerText}>Amount</Text>
+                  </DataTable.Title>
+                  <DataTable.Title style={styles.column}>
+                    <Text style={styles.headerText}>Date</Text>
+                  </DataTable.Title>
+                </DataTable.Header>
 
-              {transactions.map((transaction) => (
-                <DataTable.Row key={transaction.id}>
-                  <DataTable.Cell style={{ flex: 2 }}><Text style={{ color: '#111', textAlign: 'left' }}>{transaction.wherePaid}</Text></DataTable.Cell>
-                  <DataTable.Cell numeric style={{ flex: 1 }}><Text style={{ color: '#111', textAlign: 'right' }}>₹{transaction.amount}</Text></DataTable.Cell>
-                  <DataTable.Cell style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: '#111', textAlign: 'center' }}>{transaction.date}</Text></DataTable.Cell>
-                </DataTable.Row>
-              ))}
-            </DataTable>
+                {transactions.map((transaction, index) => (
+                  <DataTable.Row key={transaction.id} style={[
+                    styles.tableRow,
+                    index % 2 === 0 ? styles.evenRow : styles.oddRow
+                  ]}>
+                    <DataTable.Cell style={styles.column}>
+                      <Text style={styles.cellText} numberOfLines={2}>{transaction.wherePaid}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={styles.column}>
+                      <Text style={styles.amountText}>₹{transaction.amount}</Text>
+                    </DataTable.Cell>
+                    <DataTable.Cell style={styles.column}>
+                      <Text style={styles.cellText}>{transaction.date}</Text>
+                    </DataTable.Cell>
+                  </DataTable.Row>
+                ))}
+              </DataTable>
+            </View>
           )}
         </View>
       </ScrollView>
@@ -185,14 +222,15 @@ export default function OthersScreen() {
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalScroll} contentContainerStyle={{ paddingBottom: 32 }}>
             <View style={styles.modalContent}>
-              <MaterialCommunityIcons 
-                name="close" 
-                size={28} 
-                color="#222" 
-                style={styles.closeIcon} 
-                onPress={() => setModalVisible(false)} 
-              />
-              <Text style={styles.modalTitle}>Add Payment Transaction</Text>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Payment Transaction</Text>
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <MaterialCommunityIcons name="close" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
               
               <Text style={styles.inputLabel}>Where Paid *</Text>
               <TextInput 
@@ -311,6 +349,17 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     textAlign: 'center',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111',
+  },
   appbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -320,17 +369,39 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     height: 100,
   },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  titleIcon: {
+    marginRight: 8,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+    color: '#fff',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  addButtonText: {
+    fontSize: 19,
+    fontWeight: 'bold',
     color: '#111',
-    flex: 1,
-  },
-  iconButtonWrapper: {
-    padding: 4,
-  },
-  iconButton: {
-    marginLeft: 8,
+    paddingBottom: 0,
   },
   container: {
     flex: 1,
@@ -344,6 +415,54 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#111',
+  },
+  tableContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableHeader: {
+    backgroundColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  column: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  headerText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#111',
+    textAlign: 'center',
+  },
+  tableRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  evenRow: {
+    backgroundColor: '#f9f9f9',
+  },
+  oddRow: {
+    backgroundColor: '#fff',
+  },
+  cellText: {
+    fontSize: 14,
+    color: '#111',
+    textAlign: 'center',
+  },
+  amountText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#111',
+    textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',
@@ -381,16 +500,19 @@ const styles = StyleSheet.create({
     padding: 24,
     minHeight: 400,
   },
-  closeIcon: {
-    alignSelf: 'flex-end',
-    marginBottom: 16,
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 24,
-    textAlign: 'center',
     color: '#111',
+  },
+  closeButton: {
+    padding: 8,
   },
   inputLabel: {
     fontSize: 14,

@@ -13,6 +13,7 @@ interface AuthContextProps {
   setBranch: (branch: BranchId | null) => void;
   loading: boolean;
   userRole: Role;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextProps>({
   setBranch: () => {},
   loading: true,
   userRole: null,
+  error: null,
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -32,32 +34,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [branch, setBranch] = useState<BranchId | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<Role>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
       setUser(firebaseUser);
-      setLoading(false);
+        setError(null);
+        
       if (firebaseUser) {
         // Get custom claims from user token
         const token = await firebaseUser.getIdTokenResult(true);
         setClaims(token.claims);
+          
         // Fetch user role from Firestore
+          try {
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
-          setUserRole(userDoc.data().role || null);
+              const userData = userDoc.data();
+              const role = userData?.role || null;
+              setUserRole(role);
+            } else {
+              setUserRole(null);
+            }
+          } catch (firestoreError) {
+            console.error('Error fetching user role:', firestoreError);
+            setUserRole(null);
+            setError('Failed to fetch user role');
+          }
         } else {
+          setClaims(null);
           setUserRole(null);
         }
-      } else {
-        setClaims(null);
+      } catch (authError) {
+        console.error('Auth state change error:', authError);
+        setError('Authentication error occurred');
         setUserRole(null);
+      } finally {
+        setLoading(false);
       }
     });
+    
     return unsubscribe;
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, claims, branch, setBranch, loading, userRole }}>
+    <AuthContext.Provider value={{ user, claims, branch, setBranch, loading, userRole, error }}>
       {children}
     </AuthContext.Provider>
   );

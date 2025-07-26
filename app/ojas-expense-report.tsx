@@ -133,25 +133,48 @@ export default function OjasExpenseReport() {
         />
       )}
       <DataTable>
-        <DataTable.Header>
-          <DataTable.Title>Date</DataTable.Title>
-          <DataTable.Title>Type</DataTable.Title>
-          <DataTable.Title numeric>Amount</DataTable.Title>
-          <DataTable.Title>Status</DataTable.Title>
+        <DataTable.Header style={{ backgroundColor: PRIMARY_BROWN }}>
+          <DataTable.Title style={{ flex: 1, justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Date</Text></DataTable.Title>
+          <DataTable.Title style={{ flex: 1.2, justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Type</Text></DataTable.Title>
+          <DataTable.Title numeric style={{ flex: 1.2, justifyContent: 'center', paddingRight: 24 }}><Text style={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Amount</Text></DataTable.Title>
+          <DataTable.Title style={{ flex: 1, justifyContent: 'center' }}><Text style={{ color: '#fff', fontWeight: 'bold', textAlign: 'center' }}>Status</Text></DataTable.Title>
         </DataTable.Header>
         {expenses.map(e => (
-          <DataTable.Row key={e.id}>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{formatDate(e.createdAt)}</Text></DataTable.Cell>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{e.type}</Text></DataTable.Cell>
-            <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{e.cash}</Text></DataTable.Cell>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{e.status}</Text></DataTable.Cell>
+          <DataTable.Row key={e.id} style={{ minHeight: 44 }}>
+            <DataTable.Cell style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 1, minWidth: 80 }}>
+              <Text style={{ color: '#111', textAlign: 'center' }} numberOfLines={1} ellipsizeMode="tail">{formatDate(e.createdAt)}</Text>
+            </DataTable.Cell>
+            <DataTable.Cell style={{ flex: 1.2, justifyContent: 'center', paddingHorizontal: 6, minWidth: 80 }}>
+              <Text style={{ color: '#111', textAlign: 'center' }} numberOfLines={1} ellipsizeMode="tail">{e.type}</Text>
+            </DataTable.Cell>
+            <DataTable.Cell numeric style={{ flex: 1.2, justifyContent: 'center', paddingRight: 24, minWidth: 80 }}>
+              <Text style={{ color: '#111', textAlign: 'center' }} numberOfLines={1} ellipsizeMode="tail">{e.cash}</Text>
+            </DataTable.Cell>
+            <DataTable.Cell style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 6, minWidth: 80 }}>
+              <Text
+                style={{
+                  color: e.status === 'done' ? '#207a3c' : e.status === 'pending' ? '#b71c1c' : '#111',
+                  backgroundColor: e.status === 'done' ? '#e0f7e9' : e.status === 'pending' ? '#ffebee' : 'transparent',
+                  borderRadius: 8,
+                  paddingHorizontal: 8,
+                  paddingVertical: 2,
+                  textAlign: 'center',
+                  overflow: 'hidden',
+                  fontWeight: 'bold',
+                }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {e.status}
+              </Text>
+            </DataTable.Cell>
           </DataTable.Row>
         ))}
-        <DataTable.Row>
-          <DataTable.Cell><Text style={{ color: '#111' }}>Total</Text></DataTable.Cell>
-          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
-          <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{getTotal()}</Text></DataTable.Cell>
-          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
+        <DataTable.Row style={{ backgroundColor: '#f8f8f8', minHeight: 44 }}>
+          <DataTable.Cell style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 6 }}><Text style={{ color: '#111', fontWeight: 'bold', textAlign: 'center' }}>Total</Text></DataTable.Cell>
+          <DataTable.Cell style={{ flex: 1.2 }}><Text style={{ textAlign: 'center' }}> </Text></DataTable.Cell>
+          <DataTable.Cell numeric style={{ flex: 1.2, justifyContent: 'center', paddingRight: 24 }}><Text style={{ color: '#111', fontWeight: 'bold', textAlign: 'center' }}>{getTotal()}</Text></DataTable.Cell>
+          <DataTable.Cell style={{ flex: 1 }}><Text style={{ textAlign: 'center' }}> </Text></DataTable.Cell>
         </DataTable.Row>
       </DataTable>
       <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || expenses.length === 0}>

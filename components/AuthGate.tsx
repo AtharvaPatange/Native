@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { Avatar, Button, Surface, Text, TextInput } from 'react-native-paper';
 import { useAuth } from './AuthContext';
 
@@ -17,7 +17,15 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  if (loading) return <Text>Loading...</Text>;
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1976d2" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+  
   if (!user) {
     return (
       <KeyboardAvoidingView
@@ -98,8 +106,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                     try {
                       await Notifications.scheduleNotificationAsync({
                         content: {
-                          title: 'Welcome',
-                          body: 'Welcome to the app!',
+                          title: 'Welcome Back',
+                          body: 'You have successfully logged in!',
                           sound: true,
                         },
                         trigger: null,
@@ -108,82 +116,86 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                       console.log('Notification error after login:', e);
                     }
                   }
-                } catch (e: any) {
-                  setError(e.message || (isRegister ? 'Registration failed' : 'Login failed'));
+                } catch (err: any) {
+                  setError(err.message || 'Authentication failed');
                 } finally {
                   setSubmitting(false);
                 }
               }}
+              loading={submitting}
               disabled={submitting}
               style={styles.button}
-              contentStyle={{ paddingVertical: 6 }}
             >
-              {submitting ? (isRegister ? 'Registering...' : 'Logging in...') : (isRegister ? 'Register' : 'Login')}
+              {isRegister ? 'Create Account' : 'Sign In'}
             </Button>
             <Button
               mode="text"
-              onPress={() => {
-                setIsRegister(!isRegister);
-                setError('');
-              }}
-              style={styles.toggleBtn}
-              labelStyle={{ color: '#1976d2', fontWeight: 'bold' }}
+              onPress={() => setIsRegister(!isRegister)}
+              style={styles.switchButton}
             >
-              {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
+              {isRegister ? 'Already have an account? Sign In' : 'Need an account? Register'}
             </Button>
           </Surface>
         </View>
       </KeyboardAvoidingView>
     );
   }
+
   return <>{children}</>;
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
   bg: {
     flex: 1,
-    backgroundColor: '#e3f0fc',
+    backgroundColor: '#f5f5f5',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
   card: {
-    width: 340,
-    borderRadius: 18,
-    padding: 28,
+    padding: 20,
+    borderRadius: 12,
     backgroundColor: '#fff',
-    shadowColor: '#1976d2',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 18,
     textAlign: 'center',
-    color: '#1976d2',
+    marginBottom: 20,
+    color: '#333',
   },
   input: {
-    marginBottom: 14,
-    backgroundColor: '#f5f6fa',
+    marginBottom: 12,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+  },
+  error: {
+    color: '#d32f2f',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   button: {
     marginTop: 8,
     borderRadius: 8,
-    backgroundColor: '#1976d2',
   },
-  toggleBtn: {
-    marginTop: 10,
-  },
-  error: {
-    color: 'red',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  picker: {
-    backgroundColor: '#f5f6fa',
-    borderRadius: 8,
-    marginTop: 2,
+  switchButton: {
+    marginTop: 16,
   },
 }); 

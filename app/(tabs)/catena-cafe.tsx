@@ -10,8 +10,8 @@ import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 're
 import { Appbar, Button, Text, TextInput } from 'react-native-paper';
 
 export default function CatenaCafeScreen() {
+  const { user, loading } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
-  const { user } = useAuth();
   // Sale form
   const [saleCash, setSaleCash] = useState('');
   const [saleType, setSaleType] = useState('online');

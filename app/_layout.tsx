@@ -4,45 +4,59 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
-import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider } from '@/components/AuthContext';
-import AuthGate from '@/components/AuthGate';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { requestNotificationPermissions, scheduleNightlyNotifications } from '../components/notifications';
 
-export default function RootLayout(props) {
-  useEffect(() => {
-    (async () => {
-      const granted = await requestNotificationPermissions();
-      if (granted) {
-        await scheduleNightlyNotifications();
-      }
-    })();
-  }, []);
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  useEffect(() => {
+    if (loaded && !__DEV__) {
+      (async () => {
+        const granted = await requestNotificationPermissions();
+        if (granted) {
+          await scheduleNightlyNotifications();
+        }
+      })();
+    }
+  }, [loaded]);
+
+  if (!loaded) return null;
 
   return (
-    <PaperProvider>
-      <AuthProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <AuthGate>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
+    <SafeAreaProvider>
+      <PaperProvider>
+        <AuthProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: {
+                  backgroundColor: colorScheme === 'dark' ? '#000' : '#fff',
+                },
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="auth" />
+              <Stack.Screen name="staff" />
+              <Stack.Screen 
+                name="+not-found" 
+                options={{
+                  presentation: 'modal',
+                }}
+              />
             </Stack>
-          </AuthGate>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </AuthProvider>
-    </PaperProvider>
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+          </ThemeProvider>
+        </AuthProvider>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }

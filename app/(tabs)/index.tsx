@@ -13,8 +13,8 @@ const PRIMARY_COLOR = '#e0a86b';
 const SECONDARY_COLOR = '#e2af7a';
 
 export default function HotelOrientEliteScreen() {
+  const { user, loading } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
-  const { user } = useAuth();
   // Sale form
   const [saleCash, setSaleCash] = useState('');
   const [saleType, setSaleType] = useState('online');

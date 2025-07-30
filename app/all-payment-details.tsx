@@ -115,13 +115,13 @@ export default function AllPaymentDetailsScreen() {
             <View style={styles.tableContainer}>
         <DataTable>
                 <DataTable.Header style={styles.tableHeader}>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 2 }]}>
                     <Text style={styles.headerText}>Where Paid</Text>
                   </DataTable.Title>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 1 }]}>
                     <Text style={styles.headerText}>Amount</Text>
                   </DataTable.Title>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 1.8 }]}>
                     <Text style={styles.headerText}>Date</Text>
                   </DataTable.Title>
           </DataTable.Header>
@@ -131,13 +131,13 @@ export default function AllPaymentDetailsScreen() {
                     styles.tableRow,
                     index % 2 === 0 ? styles.evenRow : styles.oddRow
                   ]}>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 2 }]}>
                       <Text style={styles.cellText} numberOfLines={2}>{transaction.wherePaid}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 1 }]}>
                       <Text style={styles.amountText}>₹{transaction.amount}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 1.8 }]}>
                       <Text style={styles.cellText}>{transaction.date}</Text>
                     </DataTable.Cell>
             </DataTable.Row>

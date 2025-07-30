@@ -3,148 +3,172 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Print from 'expo-print';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { collection, getDocs, query, Timestamp } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button } from 'react-native-paper';
+import { collection, getDocs, query } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 
-function formatDate(date: Date | Timestamp) {
-  if (date instanceof Timestamp) date = date.toDate();
-  if (typeof date === 'string') date = new Date(date);
-  return date.toISOString().split('T')[0];
-}
+const PRIMARY_COLOR = '#7FB069';
+const SECONDARY_COLOR = '#D4E6C3';
 
 export default function CatenaCafeFoodBillReport() {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [foodbills, setFoodBills] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchFoodBills();
-  }, [startDate, endDate]);
-
-  async function fetchFoodBills() {
+  const handleDownloadPDF = async () => {
+    if (!startDate || !endDate) {
+      Alert.alert('Error', 'Please select both start and end dates');
+      return;
+    }
     setLoading(true);
     try {
-      const q = query(collection(db, 'catenacafefoodbills'));
-      const snap = await getDocs(q);
-      // Filter by date range in JS
+      // Query food bills for Catena Cafe between dates
+      const foodBillsQ = query(
+        collection(db, 'catenacafefoodbills')
+      );
+      const snap = await getDocs(foodBillsQ);
+      // Filter by date range
       const filtered = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter((f: any) => {
-          if (!f.createdAt) return false;
-          let d = f.createdAt;
-          if (d instanceof Timestamp) d = d.toDate();
-          else if (typeof d === 'string') d = new Date(d);
-          return d >= startDate && d <= new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59);
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((fb: any) => {
+          if (!fb.createdAt) return false;
+          const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
+          return d >= startDate && d <= endDate;
         });
-      setFoodBills(filtered);
+      // Calculate total amount
+      const totalAmount = filtered.reduce((sum: number, fb: any) => sum + (fb.amount || 0), 0);
+      // Generate HTML for PDF
+      const html = `
+        <h2>Food Bills (Catena Cafe)</h2>
+        <p>From: ${startDate.toLocaleDateString()} To: ${endDate.toLocaleDateString()}</p>
+        <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Payment Mode</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map((fb: any) => `
+              <tr>
+                <td>${fb.createdAt && fb.createdAt.seconds ? new Date(fb.createdAt.seconds * 1000).toLocaleDateString() : ''}</td>
+                <td>${fb.paymentMode || '-'}</td>
+                <td>${fb.status || '-'}</td>
+                <td>₹${fb.amount || 0}</td>
+              </tr>
+            `).join('')}
+            <tr>
+              <td colspan="3" style="font-weight:bold;text-align:right;">Total Amount</td>
+              <td style="font-weight:bold;">₹${totalAmount}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share PDF', UTI: 'com.adobe.pdf' });
+      } else {
+        Alert.alert('PDF generated', 'PDF file created at: ' + uri);
+      }
     } catch (e) {
-      setFoodBills([]);
+      Alert.alert('Error', 'Failed to generate PDF.');
     }
     setLoading(false);
-  }
-
-  async function handleDownloadPDF() {
-    // Generate HTML for PDF
-    const html = `
-      <h2>Catena Cafe Food Bills Report</h2>
-      <p>From: ${formatDate(startDate)} To: ${formatDate(endDate)}</p>
-      <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:12px;">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Payment Mode</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${foodbills.map(f => `
-            <tr>
-              <td>${formatDate(f.createdAt)}</td>
-              <td>₹${f.amount || 0}</td>
-              <td>${f.status || ''}</td>
-              <td>${f.paymentMode || ''}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
-    const { uri } = await Print.printToFileAsync({ html, base64: false });
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share PDF', UTI: 'com.adobe.pdf' });
-    }
-  }
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Catena Cafe Food Bills Report</Text>
-      <View style={styles.row}>
-        <Button mode="outlined" onPress={() => setShowStartPicker(true)} style={styles.dateBtn}>
-          Start: {formatDate(startDate)}
-        </Button>
-        <Button mode="outlined" onPress={() => setShowEndPicker(true)} style={styles.dateBtn}>
-          End: {formatDate(endDate)}
-        </Button>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Food Bills - Catena Cafe</Text>
+      <View style={styles.pickerRow}>
+        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.pickerBtn}>
+          <Text style={styles.pickerLabel}>Start Date</Text>
+          <Text style={styles.pickerValue}>{startDate ? startDate.toLocaleDateString() : 'Select'}</Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(_, date) => {
+              setShowStartPicker(false);
+              if (date) setStartDate(date);
+            }}
+          />
+        )}
+        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.pickerBtn}>
+          <Text style={styles.pickerLabel}>End Date</Text>
+          <Text style={styles.pickerValue}>{endDate ? endDate.toLocaleDateString() : 'Select'}</Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(_, date) => {
+              setShowEndPicker(false);
+              if (date) setEndDate(date);
+            }}
+          />
+        )}
       </View>
-      {showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_, date) => {
-            setShowStartPicker(false);
-            if (date) setStartDate(date);
-          }}
-        />
-      )}
-      {showEndPicker && (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_, date) => {
-            setShowEndPicker(false);
-            if (date) setEndDate(date);
-          }}
-        />
-      )}
-      {/* Custom Table Header */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#eee', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Date</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Amount</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Status</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center', color: '#111' }}>Payment Mode</Text>
-      </View>
-      {/* Custom Table Rows */}
-      {foodbills.map(f => (
-        <View key={f.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 }}>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{formatDate(f.createdAt)}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{f.amount || 0}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{f.status || ''}</Text>
-          <Text style={{ flex: 1, textAlign: 'center', color: '#111' }}>{f.paymentMode || ''}</Text>
-        </View>
-      ))}
-      <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || foodbills.length === 0}>
+      <Button mode="contained" style={styles.downloadBtn} onPress={handleDownloadPDF} loading={loading} disabled={loading} icon="download">
         Download PDF
       </Button>
-      <Button mode="text" onPress={() => router.back()} style={{ marginTop: 16 }}>Back</Button>
     </ScrollView>
   );
 }
 
-const PRIMARY_GREEN = '#A8E6A3';
-const SECONDARY_GREEN = '#E8FCEB';
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: SECONDARY_GREEN, padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
-  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_GREEN, color: '#111' },
-  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_GREEN },
+  container: {
+    padding: 24,
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100%',
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: PRIMARY_COLOR,
+    marginBottom: 24,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 18,
+  },
+  pickerBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    minWidth: 120,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 4,
+  },
+  pickerValue: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: 'bold',
+  },
+  downloadBtn: {
+    marginTop: 18,
+    borderRadius: 8,
+    backgroundColor: PRIMARY_COLOR,
+    minWidth: 180,
+  },
 }); 

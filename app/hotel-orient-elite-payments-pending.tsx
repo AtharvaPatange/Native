@@ -1,4 +1,5 @@
 import { db } from '@/constants/firebaseConfig';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import * as Print from 'expo-print';
@@ -6,15 +7,22 @@ import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { collection, doc, getDocs, query, Timestamp, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, Dialog, Paragraph, Portal, RadioButton } from 'react-native-paper';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, Card, Dialog, Portal, RadioButton } from 'react-native-paper';
 
+const PRIMARY_COLOR = '#e0a86b';
+const SECONDARY_COLOR = '#e2af7a';
+const DARK_GOLD = '#d4a574';
 
 function formatDate(date: any) {
   if (!date) return '';
   if (date instanceof Timestamp) date = date.toDate();
   if (typeof date === 'string') date = new Date(date);
-  return date.toISOString().split('T')[0];
+  return date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  });
 }
 
 export default function HotelOrientElitePaymentsPending() {
@@ -108,27 +116,173 @@ export default function HotelOrientElitePaymentsPending() {
     }
   }
 
+  const getStatusIcon = (status: string) => {
+    return status === 'pending' ? 'clock-outline' : 'check-circle';
+  };
+
+  const getStatusColor = (status: string) => {
+    return status === 'pending' ? '#ff9800' : '#4caf50';
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'online': return 'credit-card';
+      case 'card': return 'credit-card-outline';
+      case 'bank': return 'bank';
+      default: return 'cash';
+    }
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Hotel Orient Elite Payments</Text>
-      <View style={{ marginBottom: 16 }}>
-        <Picker
-          selectedValue={filterStatus}
-          onValueChange={v => setFilterStatus(v)}
-          style={{ backgroundColor: '#fff', borderRadius: 8 }}
-        >
-          <Picker.Item label="Pending" value="pending" />
-          <Picker.Item label="Done" value="done" />
-        </Picker>
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <MaterialCommunityIcons name="cash-multiple" size={28} color={DARK_GOLD} />
+        <Text style={styles.header}>Pending Sales</Text>
+        <Text style={styles.subHeader}>Manage and track sales status</Text>
       </View>
-      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-        <Button mode="outlined" onPress={() => setShowStartPicker(true)} style={{ flex: 1, marginRight: 8 }}>
-          Start: {formatDate(startDate)}
-        </Button>
-        <Button mode="outlined" onPress={() => setShowEndPicker(true)} style={{ flex: 1 }}>
-          End: {formatDate(endDate)}
-        </Button>
-      </View>
+
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Filters Section */}
+        <Card style={styles.filterCard}>
+          <Card.Content>
+            <View style={styles.filterRow}>
+              <View style={styles.pickerContainer}>
+                <MaterialCommunityIcons name="filter-variant" size={20} color={PRIMARY_COLOR} />
+                <Picker
+                  selectedValue={filterStatus}
+                  onValueChange={v => setFilterStatus(v)}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Completed" value="done" />
+                </Picker>
+              </View>
+            </View>
+            
+            <View style={styles.dateRow}>
+              <TouchableOpacity 
+                style={styles.dateButton} 
+                onPress={() => setShowStartPicker(true)}
+              >
+                <MaterialCommunityIcons name="calendar-start" size={20} color={PRIMARY_COLOR} />
+                <Text style={styles.dateButtonText}>Start: {formatDate(startDate)}</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.dateButton} 
+                onPress={() => setShowEndPicker(true)}
+              >
+                <MaterialCommunityIcons name="calendar-end" size={20} color={PRIMARY_COLOR} />
+                <Text style={styles.dateButtonText}>End: {formatDate(endDate)}</Text>
+              </TouchableOpacity>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Summary Card */}
+        <Card style={styles.summaryCard}>
+          <Card.Content>
+            <View style={styles.summaryRow}>
+              <View style={styles.summaryItem}>
+                <MaterialCommunityIcons name="cash" size={24} color={DARK_GOLD} />
+                <Text style={styles.summaryLabel}>Total Amount</Text>
+                <Text style={styles.summaryValue}>
+                  ₹{payments.reduce((sum, p) => sum + (p.cash || p.amount || 0), 0).toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.summaryItem}>
+                <MaterialCommunityIcons name="format-list-numbered" size={24} color={DARK_GOLD} />
+                <Text style={styles.summaryLabel}>Total Records</Text>
+                <Text style={styles.summaryValue}>{payments.length}</Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Payments List */}
+        {payments.length === 0 ? (
+          <Card style={styles.emptyCard}>
+            <Card.Content style={styles.emptyContent}>
+              <MaterialCommunityIcons name="cash-remove" size={64} color={PRIMARY_COLOR} />
+              <Text style={styles.emptyText}>No {filterStatus} sales found</Text>
+              <Text style={styles.emptySubText}>Try adjusting your filters or date range</Text>
+            </Card.Content>
+          </Card>
+        ) : (
+          payments.map((payment, index) => (
+            <Card key={payment.id} style={[styles.paymentCard, index === 0 && styles.firstCard]}>
+              <Card.Content>
+                <View style={styles.paymentHeader}>
+                  <View style={styles.paymentInfo}>
+                    <MaterialCommunityIcons 
+                      name={getTypeIcon(payment.type)} 
+                      size={24} 
+                      color={PRIMARY_COLOR} 
+                    />
+                    <View style={styles.paymentDetails}>
+                      <Text style={styles.paymentAmount}>₹{(payment.cash || payment.amount || 0).toLocaleString()}</Text>
+                      <Text style={styles.paymentType}>{payment.type || 'Cash'}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.statusContainer}>
+                    <MaterialCommunityIcons 
+                      name={getStatusIcon(payment.status)} 
+                      size={20} 
+                      color={getStatusColor(payment.status)} 
+                    />
+                    <Text style={[styles.statusText, { color: getStatusColor(payment.status) }]}>
+                      {payment.status}
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={styles.paymentFooter}>
+                  <View style={styles.paymentMeta}>
+                    <MaterialCommunityIcons name="account" size={16} color="#666" />
+                    <Text style={styles.metaText}>{payment.createdBy || 'Unknown'}</Text>
+                  </View>
+                  <View style={styles.paymentMeta}>
+                    <MaterialCommunityIcons name="calendar" size={16} color="#666" />
+                    <Text style={styles.metaText}>{formatDate(payment.createdAt)}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.viewButton}
+                  onPress={() => { setSelected(payment); setStatus(payment.status); setModalVisible(true); }}
+                >
+                  <MaterialCommunityIcons name="eye" size={16} color="#fff" />
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </Card.Content>
+            </Card>
+          ))
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <Button 
+            mode="outlined" 
+            onPress={() => router.back()} 
+            style={styles.backButton}
+            textColor={PRIMARY_COLOR}
+            icon="arrow-left"
+          >
+            Back
+          </Button>
+          <Button 
+            mode="contained" 
+            onPress={handleDownloadReport} 
+            style={styles.downloadButton}
+            buttonColor={PRIMARY_COLOR}
+            icon="download"
+          >
+            Download Report
+          </Button>
+        </View>
+      </ScrollView>
+
+      {/* Date Pickers */}
       {showStartPicker && (
         <DateTimePicker
           value={startDate}
@@ -151,59 +305,305 @@ export default function HotelOrientElitePaymentsPending() {
           }}
         />
       )}
-      {/* Custom Table Header */}
-      <View style={{ flexDirection: 'row', backgroundColor: '#eee', borderRadius: 6, paddingVertical: 8, marginBottom: 4 }}>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Amount</Text>
-        <Text style={{ width: 16 }}> </Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Type</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>Status</Text>
-        <Text style={{ flex: 1, fontWeight: 'bold', textAlign: 'center' }}>View</Text>
-      </View>
-      {/* Custom Table Rows */}
-      {payments.map(p => (
-        <View key={p.id} style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 8 }}>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.cash || p.amount || 0}</Text>
-          <Text style={{ width: 16 }}> </Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.type || '-'}</Text>
-          <Text style={{ flex: 1, textAlign: 'center' }}>{p.status}</Text>
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Button mode="outlined" compact onPress={() => { setSelected(p); setStatus(p.status); setModalVisible(true); }}>View</Button>
-          </View>
-        </View>
-      ))}
-      <Button mode="text" onPress={() => router.back()} style={{ marginTop: 16 }}>Back</Button>
-      <Button mode="contained" onPress={handleDownloadReport} style={{ marginTop: 8, backgroundColor: '#e0a86b' }}>
-        Download Report
-      </Button>
+
+      {/* Details Modal */}
       <Portal>
         <Dialog visible={modalVisible} onDismiss={() => setModalVisible(false)}>
-          <Dialog.Title>Payment Details</Dialog.Title>
+          <Dialog.Title style={styles.dialogTitle}>Payment Details</Dialog.Title>
           <Dialog.Content>
             {selected && (
-              <>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Created By:</Text> {selected.createdBy || '-'}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Amount:</Text> ₹{selected.cash || selected.amount || 0}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Type:</Text> {selected.type || '-'}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Status:</Text> {selected.status}</Paragraph>
-                <Paragraph><Text style={{ fontWeight: 'bold' }}>Date:</Text> {formatDate(selected.createdAt)}</Paragraph>
-              </>
+              <View style={styles.dialogContent}>
+                <View style={styles.dialogRow}>
+                  <MaterialCommunityIcons name="account" size={20} color={PRIMARY_COLOR} />
+                  <Text style={styles.dialogLabel}>Created By:</Text>
+                  <Text style={styles.dialogValue}>{selected.createdBy || '-'}</Text>
+                </View>
+                <View style={styles.dialogRow}>
+                  <MaterialCommunityIcons name="currency-inr" size={20} color={PRIMARY_COLOR} />
+                  <Text style={styles.dialogLabel}>Amount:</Text>
+                  <Text style={styles.dialogValue}>₹{(selected.cash || selected.amount || 0).toLocaleString()}</Text>
+                </View>
+                <View style={styles.dialogRow}>
+                  <MaterialCommunityIcons name={getTypeIcon(selected.type)} size={20} color={PRIMARY_COLOR} />
+                  <Text style={styles.dialogLabel}>Type:</Text>
+                  <Text style={styles.dialogValue}>{selected.type || '-'}</Text>
+                </View>
+                <View style={styles.dialogRow}>
+                  <MaterialCommunityIcons name={getStatusIcon(selected.status)} size={20} color={getStatusColor(selected.status)} />
+                  <Text style={styles.dialogLabel}>Status:</Text>
+                  <Text style={[styles.dialogValue, { color: getStatusColor(selected.status) }]}>{selected.status}</Text>
+                </View>
+                <View style={styles.dialogRow}>
+                  <MaterialCommunityIcons name="calendar" size={20} color={PRIMARY_COLOR} />
+                  <Text style={styles.dialogLabel}>Date:</Text>
+                  <Text style={styles.dialogValue}>{formatDate(selected.createdAt)}</Text>
+                </View>
+              </View>
             )}
-            <RadioButton.Group onValueChange={setStatus} value={status}>
-              <RadioButton.Item label="Pending" value="pending" />
-              <RadioButton.Item label="Done" value="done" />
-            </RadioButton.Group>
+            <View style={styles.statusSelector}>
+              <Text style={styles.statusSelectorLabel}>Update Status:</Text>
+              <RadioButton.Group onValueChange={setStatus} value={status}>
+                <RadioButton.Item label="Pending" value="pending" color={PRIMARY_COLOR} />
+                <RadioButton.Item label="Completed" value="done" color={PRIMARY_COLOR} />
+              </RadioButton.Group>
+            </View>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setModalVisible(false)}>Cancel</Button>
-            <Button onPress={handleSave} loading={loading}>Save</Button>
+            <Button onPress={() => setModalVisible(false)} textColor={PRIMARY_COLOR}>Cancel</Button>
+            <Button onPress={handleSave} loading={loading} textColor={PRIMARY_COLOR}>Save</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f6fa', padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#e0a86b', textAlign: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  headerContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: SECONDARY_COLOR,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: DARK_GOLD,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  subHeader: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+  },
+  filterCard: {
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+  },
+  filterRow: {
+    marginBottom: 12,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+  },
+  picker: {
+    flex: 1,
+    height: 50,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  dateButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: DARK_GOLD,
+    fontWeight: '500',
+  },
+  summaryCard: {
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  summaryItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  summaryValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: DARK_GOLD,
+    marginTop: 2,
+  },
+  paymentCard: {
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: PRIMARY_COLOR,
+  },
+  firstCard: {
+    borderLeftColor: DARK_GOLD,
+  },
+  paymentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  paymentInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  paymentDetails: {
+    marginLeft: 12,
+  },
+  paymentAmount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: DARK_GOLD,
+  },
+  paymentType: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusText: {
+    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  paymentFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  paymentMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metaText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#666',
+  },
+  viewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: PRIMARY_COLOR,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: 'flex-end',
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  emptyCard: {
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+  },
+  emptyContent: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#666',
+  },
+  emptySubText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  backButton: {
+    flex: 1,
+    marginRight: 8,
+    borderColor: PRIMARY_COLOR,
+  },
+  downloadButton: {
+    flex: 1,
+    marginLeft: 8,
+  },
+  dialogTitle: {
+    color: DARK_GOLD,
+    fontWeight: 'bold',
+  },
+  dialogContent: {
+    marginBottom: 16,
+  },
+  dialogRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  dialogLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 8,
+    flex: 1,
+  },
+  dialogValue: {
+    fontSize: 14,
+    color: '#666',
+    flex: 2,
+  },
+  statusSelector: {
+    marginTop: 16,
+  },
+  statusSelectorLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
 }); 

@@ -1,28 +1,40 @@
 import { useAuth } from '@/components/AuthContext';
-import { auth, db } from '@/constants/firebaseConfig';
+import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { signOut } from 'firebase/auth';
+import { router } from 'expo-router';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Portal, Text, TextInput } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#e0a86b';
-const SECONDARY_COLOR = '#e2af7a';
+// Color themes for different branches
+const ORIENT_ELITE_PRIMARY = '#e0a86b';
+const ORIENT_ELITE_SECONDARY = '#e2af7a';
+
+const OJAS_PRIMARY = '#8D6748';
+const OJAS_SECONDARY = '#CBB292';
+
+const CATENA_PRIMARY = '#7FB069';
+const CATENA_SECONDARY = '#D4E6C3';
+
+// Default to Orient Elite theme
+const PRIMARY_COLOR = ORIENT_ELITE_PRIMARY;
+const SECONDARY_COLOR = ORIENT_ELITE_SECONDARY;
 
 interface UserProfile {
   name: string;
   address: string;
   phone: string;
   workSection: string;
-  email: string;
+  email: string | null;
   role: string;
 }
 
 export default function ProfileScreen() {
-  const { user, userRole } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { user, userRole, logout, loading } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({
     name: '',
@@ -33,21 +45,82 @@ export default function ProfileScreen() {
     role: userRole || '',
   });
 
+  // Function to get theme colors based on work section
+  const getThemeColors = (workSection: string) => {
+    switch (workSection) {
+      case 'orientElite':
+        return {
+          primary: ORIENT_ELITE_PRIMARY,
+          secondary: ORIENT_ELITE_SECONDARY,
+        };
+      case 'ojas':
+        return {
+          primary: OJAS_PRIMARY,
+          secondary: OJAS_SECONDARY,
+        };
+      case 'catenaCafe':
+        return {
+          primary: CATENA_PRIMARY,
+          secondary: CATENA_SECONDARY,
+        };
+      default:
+        // Default to Orient Elite theme if no work section is specified
+        return {
+          primary: ORIENT_ELITE_PRIMARY,
+          secondary: ORIENT_ELITE_SECONDARY,
+        };
+    }
+  };
+
+  // Get current theme colors
+  const themeColors = getThemeColors(profile.workSection);
+
+  // Debug logging
+  console.log('Profile - Current userRole:', userRole);
+  console.log('Profile - Current profile state:', profile);
+  console.log('Profile - Current theme colors:', themeColors);
+
+  // Update profile when userRole changes
+  useEffect(() => {
+    if (userRole) {
+      setProfile(prev => ({
+        ...prev,
+        role: userRole,
+      }));
+    }
+  }, [userRole]);
+
+  // Update profile when user email changes
+  useEffect(() => {
+    if (user?.email) {
+      setProfile(prev => ({
+        ...prev,
+        email: user.email,
+      }));
+    }
+  }, [user?.email]);
+
   // Fetch existing profile data
   useEffect(() => {
     const fetchProfile = async () => {
       if (user?.uid) {
         try {
+          console.log('Profile - Fetching profile for user:', user.uid);
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists()) {
             const data = userDoc.data();
+            console.log('Profile - User data fetched:', data);
             setProfile(prev => ({
               ...prev,
               name: data.name || '',
               address: data.address || '',
               phone: data.phone || '',
               workSection: data.workSection || '',
+              email: data.email || user?.email || '',
+              role: data.role || userRole || '',
             }));
+          } else {
+            console.log('Profile - User document does not exist');
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
@@ -56,7 +129,7 @@ export default function ProfileScreen() {
     };
 
     fetchProfile();
-  }, [user?.uid]);
+  }, [user?.uid, userRole]);
 
   const handleSaveProfile = async () => {
     if (!user?.uid) {
@@ -69,68 +142,44 @@ export default function ProfileScreen() {
       return;
     }
 
-    // Validate phone number - must be exactly 10 digits
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(profile.phone.replace(/\D/g, ''))) {
-      Alert.alert('Error', 'Phone number must be exactly 10 digits');
-      return;
-    }
-
-    setLoading(true);
+    setProfileLoading(true);
     try {
       await setDoc(doc(db, 'users', user.uid), {
-        ...profile,
-        phone: profile.phone.replace(/\D/g, ''), // Store only digits
+        name: profile.name.trim(),
+        address: profile.address.trim(),
+        phone: profile.phone.trim(),
+        workSection: profile.workSection,
+        email: profile.email,
+        role: profile.role,
         updatedAt: new Date(),
       }, { merge: true });
-      
-      Alert.alert('Success', 'Profile saved successfully!');
+
+      Alert.alert('Success', 'Profile updated successfully!');
       setModalVisible(false);
+      setIsEditing(false);
     } catch (error) {
       console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to save profile');
+      Alert.alert('Error', 'Failed to save profile. Please try again.');
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
   const handlePhoneChange = (text: string) => {
-    // Remove all non-digit characters
-    const digitsOnly = text.replace(/\D/g, '');
+    // Remove all non-numeric characters
+    const cleaned = text.replace(/\D/g, '');
     
     // Limit to 10 digits
-    if (digitsOnly.length <= 10) {
-      setProfile(prev => ({ ...prev, phone: digitsOnly }));
+    if (cleaned.length <= 10) {
+      setProfile(prev => ({ ...prev, phone: cleaned }));
     }
   };
 
   const formatPhoneNumber = (phone: string) => {
-    const digitsOnly = phone.replace(/\D/g, '');
-    if (digitsOnly.length === 10) {
-      return `(${digitsOnly.slice(0, 3)}) ${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
+    if (phone.length === 10) {
+      return `${phone.slice(0, 5)} ${phone.slice(5, 10)}`;
     }
-    return digitsOnly;
-  };
-
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await signOut(auth);
-            } catch (e) {
-              Alert.alert('Logout Failed', 'Could not log out.');
-            }
-          }
-        }
-      ]
-    );
+    return phone;
   };
 
   const getWorkSectionDisplayName = (section: string) => {
@@ -144,8 +193,8 @@ export default function ProfileScreen() {
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'globalAdmin': return 'Global Administrator';
-      case 'admin': return 'Administrator';
+      case 'globalAdmin': return 'Global Admin';
+      case 'admin': return 'Admin';
       case 'operator': return 'Operator';
       default: return role || 'Not assigned';
     }
@@ -156,11 +205,11 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
         {/* Large User Icon with Name */}
         <View style={styles.iconContainer}>
-          <View style={styles.iconWrapper}>
+          <View style={[styles.iconWrapper, { backgroundColor: `rgba(${themeColors.primary === ORIENT_ELITE_PRIMARY ? '224, 168, 107' : themeColors.primary === OJAS_PRIMARY ? '141, 103, 72' : '127, 176, 105'}, 0.1)` }]}>
             <MaterialCommunityIcons 
               name="account-circle" 
               size={100} 
-              color={PRIMARY_COLOR} 
+              color={themeColors.primary} 
             />
           </View>
           <Text style={styles.userName}>{profile.name || 'User Profile'}</Text>
@@ -171,49 +220,49 @@ export default function ProfileScreen() {
           <Card.Title 
             title="Profile Information" 
             titleStyle={styles.cardTitle}
-            style={styles.cardHeader}
+            style={[styles.cardHeader, { backgroundColor: themeColors.primary }]}
             left={(props) => <MaterialCommunityIcons {...props} name="account-details" size={24} color="#fff" />}
           />
           <Card.Content style={styles.cardContent}>
             <View style={styles.profileSection}>
-              <View style={styles.profileRow}>
+              <View style={[styles.profileRow, { borderLeftColor: themeColors.primary }]}>
                 <View style={styles.labelContainer}>
-                  <MaterialCommunityIcons name="account" size={20} color={PRIMARY_COLOR} />
+                  <MaterialCommunityIcons name="account" size={20} color={themeColors.primary} />
                   <Text style={styles.label}>Full Name</Text>
                 </View>
                 <Text style={styles.value}>{profile.name || 'Not set'}</Text>
               </View>
 
-              <View style={styles.profileRow}>
+              <View style={[styles.profileRow, { borderLeftColor: themeColors.primary }]}>
                 <View style={styles.labelContainer}>
-                  <MaterialCommunityIcons name="phone" size={20} color={PRIMARY_COLOR} />
+                  <MaterialCommunityIcons name="phone" size={20} color={themeColors.primary} />
                   <Text style={styles.label}>Phone</Text>
                 </View>
                 <Text style={styles.value}>{profile.phone ? formatPhoneNumber(profile.phone) : 'Not set'}</Text>
               </View>
 
-              <View style={styles.profileRow}>
+              <View style={[styles.profileRow, { borderLeftColor: themeColors.primary }]}>
                 <View style={styles.labelContainer}>
-                  <MaterialCommunityIcons name="map-marker" size={20} color={PRIMARY_COLOR} />
+                  <MaterialCommunityIcons name="map-marker" size={20} color={themeColors.primary} />
                   <Text style={styles.label}>Address</Text>
                 </View>
                 <Text style={styles.value}>{profile.address || 'Not set'}</Text>
               </View>
 
-              <View style={styles.profileRow}>
+              <View style={[styles.profileRow, { borderLeftColor: themeColors.primary }]}>
                 <View style={styles.labelContainer}>
-                  <MaterialCommunityIcons name="briefcase" size={20} color={PRIMARY_COLOR} />
+                  <MaterialCommunityIcons name="briefcase" size={20} color={themeColors.primary} />
                   <Text style={styles.label}>Work Section</Text>
                 </View>
                 <Text style={styles.value}>{getWorkSectionDisplayName(profile.workSection)}</Text>
               </View>
 
-              <View style={styles.profileRow}>
+              <View style={[styles.profileRow, { borderLeftColor: themeColors.primary }]}>
                 <View style={styles.labelContainer}>
-                  <MaterialCommunityIcons name="shield-account" size={20} color={PRIMARY_COLOR} />
+                  <MaterialCommunityIcons name="shield-account" size={20} color={themeColors.primary} />
                   <Text style={styles.label}>Role</Text>
                 </View>
-                <Text style={styles.value}>{getRoleDisplayName(profile.role)}</Text>
+                <Text style={styles.value}>{getRoleDisplayName(userRole || profile.role)}</Text>
               </View>
             </View>
           </Card.Content>
@@ -224,7 +273,7 @@ export default function ProfileScreen() {
             mode="contained" 
             style={styles.createProfileButton} 
             onPress={() => setModalVisible(true)}
-            buttonColor={PRIMARY_COLOR}
+            buttonColor={themeColors.primary}
             icon="account-edit"
             contentStyle={styles.buttonContent}
           >
@@ -234,7 +283,27 @@ export default function ProfileScreen() {
           <Button 
             mode="contained" 
             style={styles.logoutButton} 
-            onPress={handleLogout}
+            onPress={() => {
+              Alert.alert(
+                "Logout",
+                "Are you sure you want to logout?",
+                [
+                  {
+                    text: "Cancel",
+                    style: "cancel"
+                  },
+                  { 
+                    text: "Logout", 
+                    onPress: async () => {
+                      await logout(() => {
+                        router.replace('/auth');
+                      });
+                    },
+                    style: "destructive"
+                  }
+                ]
+              );
+            }}
             buttonColor="#e74c3c"
             icon="logout"
             contentStyle={styles.buttonContent}
@@ -258,7 +327,7 @@ export default function ProfileScreen() {
                 <Card.Title 
                   title="Create/Edit Profile" 
                   titleStyle={styles.modalTitle}
-                  style={styles.modalHeader}
+                  style={[styles.modalHeader, { backgroundColor: themeColors.primary }]}
                   left={(props) => <MaterialCommunityIcons {...props} name="account-edit" size={24} color="#fff" />}
                 />
                 <Card.Content style={styles.modalCardContent}>
@@ -268,44 +337,40 @@ export default function ProfileScreen() {
                     onChangeText={(text) => setProfile(prev => ({ ...prev, name: text }))}
                     style={styles.modalInput}
                     mode="outlined"
-                    outlineColor={PRIMARY_COLOR}
-                    activeOutlineColor={PRIMARY_COLOR}
-                    left={<TextInput.Icon icon="account" />}
+                    outlineColor={themeColors.primary}
+                    activeOutlineColor={themeColors.primary}
                   />
-
+                  
                   <TextInput
                     label="Phone Number *"
                     value={profile.phone}
                     onChangeText={handlePhoneChange}
                     style={styles.modalInput}
                     mode="outlined"
-                    outlineColor={PRIMARY_COLOR}
-                    activeOutlineColor={PRIMARY_COLOR}
                     keyboardType="phone-pad"
-                    left={<TextInput.Icon icon="phone" />}
-                    placeholder="Enter 10-digit number"
                     maxLength={10}
+                    outlineColor={themeColors.primary}
+                    activeOutlineColor={themeColors.primary}
                   />
-
+                  
                   <TextInput
                     label="Address"
                     value={profile.address}
                     onChangeText={(text) => setProfile(prev => ({ ...prev, address: text }))}
                     style={styles.modalInput}
                     mode="outlined"
-                    outlineColor={PRIMARY_COLOR}
-                    activeOutlineColor={PRIMARY_COLOR}
                     multiline
                     numberOfLines={3}
-                    left={<TextInput.Icon icon="map-marker" />}
+                    outlineColor={themeColors.primary}
+                    activeOutlineColor={themeColors.primary}
                   />
-
+                  
                   <View style={styles.pickerContainer}>
                     <Text style={styles.pickerLabel}>Work Section</Text>
                     <Picker
                       selectedValue={profile.workSection}
-                      onValueChange={(value) => setProfile(prev => ({ ...prev, workSection: value }))}
-                      style={styles.picker}
+                      onValueChange={(itemValue) => setProfile(prev => ({ ...prev, workSection: itemValue }))}
+                      style={[styles.picker, { borderColor: themeColors.primary }]}
                     >
                       <Picker.Item label="Select Work Section" value="" />
                       <Picker.Item label="Hotel Orient Elite" value="orientElite" />
@@ -314,32 +379,30 @@ export default function ProfileScreen() {
                     </Picker>
                   </View>
                 </Card.Content>
-              </Card>
-
-              <View style={styles.modalButtonContainer}>
-                <Button 
-                  mode="outlined" 
-                  style={styles.modalCancelButton} 
-                  onPress={() => setModalVisible(false)}
-                  textColor={PRIMARY_COLOR}
-                  outlineColor={PRIMARY_COLOR}
-                  contentStyle={styles.modalButtonContent}
-                >
-                  Cancel
-                </Button>
                 
-                <Button 
-                  mode="contained" 
-                  style={styles.modalSaveButton} 
-                  onPress={handleSaveProfile}
-                  loading={loading}
-                  disabled={loading}
-                  buttonColor={PRIMARY_COLOR}
-                  contentStyle={styles.modalButtonContent}
-                >
-                  Save Profile
-                </Button>
-              </View>
+                <View style={styles.modalButtonContainer}>
+                  <Button 
+                    mode="outlined" 
+                    onPress={() => setModalVisible(false)}
+                    style={[styles.modalCancelButton, { borderColor: themeColors.primary }]}
+                    textColor={themeColors.primary}
+                    contentStyle={styles.modalButtonContent}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    mode="contained" 
+                    onPress={handleSaveProfile}
+                    style={styles.modalSaveButton}
+                    buttonColor={themeColors.primary}
+                    loading={profileLoading}
+                    disabled={profileLoading}
+                    contentStyle={styles.modalButtonContent}
+                  >
+                    Save
+                  </Button>
+                </View>
+              </Card>
             </View>
           </View>
         </Modal>
@@ -351,18 +414,19 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Changed from gradient to white
+    backgroundColor: '#f5f5f5',
   },
   scrollView: {
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
-    paddingTop: 60,
+    padding: 20,
+    paddingBottom: 40,
   },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
+    marginTop: 20,
   },
   iconWrapper: {
     backgroundColor: 'rgba(224, 168, 107, 0.1)',

@@ -37,38 +37,6 @@ export default function OthersScreen() {
   const [notes, setNotes] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Check if user is global admin FIRST (before any data fetching)
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (userRole !== 'globalAdmin') {
-    return (
-      <View style={styles.accessDeniedContainer}>
-        <LinearGradient
-          colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
-          style={StyleSheet.absoluteFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-        <View style={styles.accessDeniedContent}>
-          <MaterialCommunityIcons name="lock" size={80} color="#fff" />
-          <Text style={styles.accessDeniedTitle}>Access Restricted</Text>
-          <Text style={styles.accessDeniedMessage}>
-            This page is accessible only to Global Administrators.
-          </Text>
-          <Text style={styles.accessDeniedSubMessage}>
-            Your current role: {userRole || 'No role assigned'}
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   // Only fetch transactions if user is global admin
   useEffect(() => {
     if (userRole !== 'globalAdmin') return;
@@ -142,6 +110,37 @@ export default function OthersScreen() {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (userRole !== 'globalAdmin') {
+    return (
+      <View style={styles.accessDeniedContainer}>
+        <LinearGradient
+          colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
+        <View style={styles.accessDeniedContent}>
+          <MaterialCommunityIcons name="lock" size={80} color="#fff" />
+          <Text style={styles.accessDeniedTitle}>Access Restricted</Text>
+          <Text style={styles.accessDeniedMessage}>
+            This page is accessible only to Global Administrators.
+          </Text>
+          <Text style={styles.accessDeniedSubMessage}>
+            Your current role: {userRole || 'No role assigned'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.appbar}>
@@ -180,13 +179,13 @@ export default function OthersScreen() {
             <View style={styles.tableContainer}>
               <DataTable>
                 <DataTable.Header style={styles.tableHeader}>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 2 }]}>
                     <Text style={styles.headerText}>Where Paid</Text>
                   </DataTable.Title>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 1 }]}>
                     <Text style={styles.headerText}>Amount</Text>
                   </DataTable.Title>
-                  <DataTable.Title style={styles.column}>
+                  <DataTable.Title style={[styles.column, { flex: 1.8 }]}>
                     <Text style={styles.headerText}>Date</Text>
                   </DataTable.Title>
                 </DataTable.Header>
@@ -196,18 +195,28 @@ export default function OthersScreen() {
                     styles.tableRow,
                     index % 2 === 0 ? styles.evenRow : styles.oddRow
                   ]}>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 2 }]}>
                       <Text style={styles.cellText} numberOfLines={2}>{transaction.wherePaid}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 1 }]}>
                       <Text style={styles.amountText}>₹{transaction.amount}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={styles.column}>
+                    <DataTable.Cell style={[styles.column, { flex: 1.8 }]}>
                       <Text style={styles.cellText}>{transaction.date}</Text>
                     </DataTable.Cell>
                   </DataTable.Row>
                 ))}
               </DataTable>
+              
+              {/* Total Section */}
+              <View style={styles.totalContainer}>
+                <View style={styles.totalRow}>
+                  <Text style={styles.totalLabel}>Total Amount:</Text>
+                  <Text style={styles.totalAmount}>
+                    ₹{transactions.reduce((sum, transaction) => sum + transaction.amount, 0).toLocaleString()}
+                  </Text>
+                </View>
+              </View>
             </View>
           )}
         </View>
@@ -302,17 +311,27 @@ export default function OthersScreen() {
           </ScrollView>
         </View>
       </Modal>
-      {/* All Payment Details Button */}
+      {/* Action Buttons */}
       {userRole === 'globalAdmin' && (
-        <View style={{ padding: 16, backgroundColor: '#fff' }}>
+        <View style={styles.actionButtonsContainer}>
           <Button
             mode="contained"
             buttonColor={PRIMARY_COLOR}
             onPress={() => router.push('/all-payment-details')}
-            style={{ borderRadius: 8 }}
+            style={[styles.actionButton, { marginBottom: 12 }]}
             icon="table"
           >
             All Payment Details
+          </Button>
+          
+          <Button
+            mode="contained"
+            buttonColor={SECONDARY_COLOR}
+            onPress={() => router.push('/staff')}
+            style={styles.actionButton}
+            icon="account-group"
+          >
+            Staff
           </Button>
         </View>
       )}
@@ -541,6 +560,37 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 16,
+    borderRadius: 8,
+  },
+  totalContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    padding: 12,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111',
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: PRIMARY_COLOR,
+  },
+  actionButtonsContainer: {
+    padding: 16,
+    backgroundColor: '#fff',
+  },
+  actionButton: {
     borderRadius: 8,
   },
 }); 

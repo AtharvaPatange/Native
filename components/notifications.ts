@@ -22,8 +22,8 @@ export async function scheduleNightlyNotifications() {
   // Schedule 10:00 PM notification
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Daily Reminder',
-      body: 'This is your 10:00 PM notification!',
+      title: 'Evening Sales Check Reminder',
+      body: 'Nikhil sir, it\'s time to check today\'s sales reports for all branches.',
       sound: true,
     },
     trigger: {
@@ -36,8 +36,8 @@ export async function scheduleNightlyNotifications() {
   // Schedule 10:30 PM notification
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Daily Reminder',
-      body: 'This is your 10:30 PM notification!',
+      title: 'Expense Review Reminder',
+      body: 'Nikhil sir, please review today\'s expenses and pending payments.',
       sound: true,
     },
     trigger: {

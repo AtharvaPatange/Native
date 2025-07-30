@@ -3,171 +3,172 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Print from 'expo-print';
 import { useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
-import { collection, getDocs, query, Timestamp, where } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, DataTable, Text } from 'react-native-paper';
+import { collection, getDocs, query } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
 
-function formatDate(date: Date | Timestamp) {
-  if (date instanceof Timestamp) date = date.toDate();
-  return date.toISOString().split('T')[0];
-}
+const PRIMARY_COLOR = '#8D6748';
+const SECONDARY_COLOR = '#CBB292';
 
 export default function OjasFoodBillReport() {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [foodbills, setFoodbills] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    fetchFoodBills();
-  }, [startDate, endDate]);
-
-  async function fetchFoodBills() {
+  const handleDownloadPDF = async () => {
+    if (!startDate || !endDate) {
+      Alert.alert('Error', 'Please select both start and end dates');
+      return;
+    }
     setLoading(true);
     try {
-      const q = query(
-        collection(db, 'ojasfoodbills'),
-        where('createdAt', '>=', startDate),
-        where('createdAt', '<=', new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59))
+      // Query food bills for Ojas between dates
+      const foodBillsQ = query(
+        collection(db, 'ojasfoodbills')
       );
-      const snap = await getDocs(q);
-      setFoodbills(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const snap = await getDocs(foodBillsQ);
+      // Filter by date range
+      const filtered = snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter((fb: any) => {
+          if (!fb.createdAt) return false;
+          const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
+          return d >= startDate && d <= endDate;
+        });
+      // Calculate total amount
+      const totalAmount = filtered.reduce((sum: number, fb: any) => sum + (fb.amount || 0), 0);
+      // Generate HTML for PDF
+      const html = `
+        <h2>Food Bills (Hotel Ojas)</h2>
+        <p>From: ${startDate.toLocaleDateString()} To: ${endDate.toLocaleDateString()}</p>
+        <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Payment Mode</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map((fb: any) => `
+              <tr>
+                <td>${fb.createdAt && fb.createdAt.seconds ? new Date(fb.createdAt.seconds * 1000).toLocaleDateString() : ''}</td>
+                <td>${fb.paymentMode || '-'}</td>
+                <td>${fb.status || '-'}</td>
+                <td>₹${fb.amount || 0}</td>
+              </tr>
+            `).join('')}
+            <tr>
+              <td colspan="3" style="font-weight:bold;text-align:right;">Total Amount</td>
+              <td style="font-weight:bold;">₹${totalAmount}</td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share PDF', UTI: 'com.adobe.pdf' });
+      } else {
+        Alert.alert('PDF generated', 'PDF file created at: ' + uri);
+      }
     } catch (e) {
-      setFoodbills([]);
+      Alert.alert('Error', 'Failed to generate PDF.');
     }
     setLoading(false);
-  }
-
-  function getTotal() {
-    return foodbills.reduce((sum, f) => sum + (f.amount || 0), 0);
-  }
-
-  async function handleDownloadPDF() {
-    let html = `
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <style>
-            body { font-family: Arial, sans-serif; padding: 24px; }
-            h2 { color: #1976d2; text-align: center; }
-            table { width: 100%; border-collapse: collapse; margin-top: 24px; }
-            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
-            th { background: #f0f4fa; }
-            tfoot td { font-weight: bold; background: #f9f9f9; }
-          </style>
-        </head>
-        <body>
-          <h2>Ojas Food Bill Report</h2>
-          <div>Date Range: ${formatDate(startDate)} to ${formatDate(endDate)}</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${foodbills.map(f => `
-                <tr>
-                  <td>${formatDate(f.createdAt)}</td>
-                  <td>${f.paymentMode || ''}</td>
-                  <td>${f.amount || 0}</td>
-                  <td>${f.status || ''}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Total</td>
-                <td></td>
-                <td>${getTotal()}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </body>
-      </html>
-    `;
-    const { uri } = await Print.printToFileAsync({ html, base64: false });
-    await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Download Ojas Food Bill Report' });
-  }
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Ojas Food Bill Report</Text>
-      <View style={styles.row}>
-        <Button mode="outlined" onPress={() => setShowStartPicker(true)} style={styles.dateBtn}>
-          Start: {formatDate(startDate)}
-        </Button>
-        <Button mode="outlined" onPress={() => setShowEndPicker(true)} style={styles.dateBtn}>
-          End: {formatDate(endDate)}
-        </Button>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Food Bills - Hotel Ojas</Text>
+      <View style={styles.pickerRow}>
+        <TouchableOpacity onPress={() => setShowStartPicker(true)} style={styles.pickerBtn}>
+          <Text style={styles.pickerLabel}>Start Date</Text>
+          <Text style={styles.pickerValue}>{startDate ? startDate.toLocaleDateString() : 'Select'}</Text>
+        </TouchableOpacity>
+        {showStartPicker && (
+          <DateTimePicker
+            value={startDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(_, date) => {
+              setShowStartPicker(false);
+              if (date) setStartDate(date);
+            }}
+          />
+        )}
+        <TouchableOpacity onPress={() => setShowEndPicker(true)} style={styles.pickerBtn}>
+          <Text style={styles.pickerLabel}>End Date</Text>
+          <Text style={styles.pickerValue}>{endDate ? endDate.toLocaleDateString() : 'Select'}</Text>
+        </TouchableOpacity>
+        {showEndPicker && (
+          <DateTimePicker
+            value={endDate || new Date()}
+            mode="date"
+            display="default"
+            onChange={(_, date) => {
+              setShowEndPicker(false);
+              if (date) setEndDate(date);
+            }}
+          />
+        )}
       </View>
-      {showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_, date) => {
-            setShowStartPicker(false);
-            if (date) setStartDate(date);
-          }}
-        />
-      )}
-      {showEndPicker && (
-        <DateTimePicker
-          value={endDate}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(_, date) => {
-            setShowEndPicker(false);
-            if (date) setEndDate(date);
-          }}
-        />
-      )}
-      <DataTable>
-        <DataTable.Header>
-          <DataTable.Title>Date</DataTable.Title>
-          <DataTable.Title>Type</DataTable.Title>
-          <DataTable.Title numeric>Amount</DataTable.Title>
-          <DataTable.Title>Status</DataTable.Title>
-        </DataTable.Header>
-        {foodbills.map(f => (
-          <DataTable.Row key={f.id}>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{formatDate(f.createdAt)}</Text></DataTable.Cell>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{f.paymentMode}</Text></DataTable.Cell>
-            <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{f.amount}</Text></DataTable.Cell>
-            <DataTable.Cell><Text style={{ color: '#111' }}>{f.status}</Text></DataTable.Cell>
-          </DataTable.Row>
-        ))}
-        <DataTable.Row>
-          <DataTable.Cell><Text style={{ color: '#111' }}>Total</Text></DataTable.Cell>
-          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
-          <DataTable.Cell numeric style={{ paddingRight: 24 }}><Text style={{ color: '#111' }}>{getTotal()}</Text></DataTable.Cell>
-          <DataTable.Cell><Text style={{ color: '#111' }}> </Text></DataTable.Cell>
-        </DataTable.Row>
-      </DataTable>
-      <Button mode="contained" onPress={handleDownloadPDF} style={styles.downloadBtn} loading={loading} disabled={loading || foodbills.length === 0}>
+      <Button mode="contained" style={styles.downloadBtn} onPress={handleDownloadPDF} loading={loading} disabled={loading} icon="download">
         Download PDF
       </Button>
-      <Button mode="text" onPress={() => router.back()} style={{ marginTop: 16 }}>Back</Button>
     </ScrollView>
   );
 }
 
-const PRIMARY_BROWN = '#8D6748';
-const SECONDARY_BROWN = '#CBB292';
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: SECONDARY_BROWN, padding: 16 },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111', textAlign: 'center' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
-  dateBtn: { flex: 1, marginHorizontal: 4, backgroundColor: PRIMARY_BROWN, color: '#fff' },
-  downloadBtn: { marginTop: 24, backgroundColor: PRIMARY_BROWN },
+  container: {
+    padding: 24,
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    minHeight: '100%',
+  },
+  header: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: PRIMARY_COLOR,
+    marginBottom: 24,
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 24,
+    gap: 18,
+  },
+  pickerBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    minWidth: 120,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    color: '#888',
+    marginBottom: 4,
+  },
+  pickerValue: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: 'bold',
+  },
+  downloadBtn: {
+    marginTop: 18,
+    borderRadius: 8,
+    backgroundColor: PRIMARY_COLOR,
+    minWidth: 180,
+  },
 }); 

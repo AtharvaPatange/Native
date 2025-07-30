@@ -60,6 +60,12 @@ interface Payment {
 const PRIMARY_COLOR = '#e0a86b';
 const SECONDARY_COLOR = '#e2af7a';
 
+// Color palettes for different branches
+const OJAS_PRIMARY = '#8D6748';
+const OJAS_SECONDARY = '#CBB292';
+const CATENA_PRIMARY = '#7FB069';
+const CATENA_SECONDARY = '#D4E6C3';
+
 const summaryStyles = StyleSheet.create({
   card: {
     backgroundColor: PRIMARY_COLOR,
@@ -79,6 +85,52 @@ const summaryStyles = StyleSheet.create({
   value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: '#222' },
   label: { fontSize: 13, color: '#6b4c1b', marginTop: 2, textAlign: 'center' },
 });
+
+// Dynamic styles based on branch
+const getBranchStyles = (branchId: string) => {
+  if (branchId === 'ojas') {
+    return {
+      card: {
+        backgroundColor: OJAS_PRIMARY,
+        borderRadius: 14,
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '47%',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: OJAS_SECONDARY,
+      },
+      value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: '#222' },
+      label: { fontSize: 13, color: '#6b4c1b', marginTop: 2, textAlign: 'center' },
+    };
+  } else if (branchId === 'catenaCafe') {
+    return {
+      card: {
+        backgroundColor: CATENA_PRIMARY,
+        borderRadius: 14,
+        padding: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '47%',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowRadius: 6,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: CATENA_SECONDARY,
+      },
+      value: { fontSize: 22, fontWeight: 'bold', marginTop: 6, color: '#222' },
+      label: { fontSize: 13, color: '#1a3d1a', marginTop: 2, textAlign: 'center' },
+    };
+  }
+  return summaryStyles;
+};
 
 export default function HotelDashboard({ branchId, branchName }: HotelDashboardProps) {
   const { user, userRole } = useAuth();
@@ -125,7 +177,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const d = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     }).reduce((sum, e) => sum + (e.cash || 0), 0);
-    ojasVendorCount = ojasVendorsList.length;
+    // Calculate total vendors: common vendors + maintenance vendors for Ojas
+    const ojasCommonVendors = ojasVendorsList.length;
+    const ojasMaintenanceVendors = new Set(ojasMaintenanceList.map(m => m.vendorName).filter(name => name && name.trim() !== '')).size;
+    ojasVendorCount = ojasCommonVendors + ojasMaintenanceVendors;
+    console.log('Hotel Ojas - Vendor count calculation:');
+    console.log('  Common vendors:', ojasCommonVendors);
+    console.log('  Maintenance vendors:', ojasMaintenanceVendors);
+    console.log('  Total vendors:', ojasVendorCount);
     ojasOpenMaintCount = ojasMaintenanceList.filter(m => m.status?.toLowerCase() !== 'done').length;
     ojasPaidPayments = ojasPaymentsList.filter(p => p.status === 'done' || p.status === 'paid').length;
     ojasPendingPayments = ojasPaymentsList.filter(p => p.status === 'pending').length;
@@ -242,7 +301,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const d = new Date(e.createdAt.seconds * 1000);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     }).reduce((sum, e) => sum + (e.cash || 0) + (e.online || 0), 0);
-    vendorCount = vendorsList.length;
+    // Calculate total vendors: common vendors + maintenance vendors
+    const commonVendors = vendorsList.length;
+    const maintenanceVendors = new Set(maintenanceList.map(m => m.vendorName).filter(name => name && name.trim() !== '')).size;
+    vendorCount = commonVendors + maintenanceVendors;
+    console.log('Hotel Orient Elite - Vendor count calculation:');
+    console.log('  Common vendors:', commonVendors);
+    console.log('  Maintenance vendors:', maintenanceVendors);
+    console.log('  Total vendors:', vendorCount);
     openMaintCount = maintenanceList.filter(m => m.status?.toLowerCase() !== 'resolved').length;
     paidPayments = paymentsList.filter(p => p.status === 'paid').length;
     pendingPayments = paymentsList.filter(p => p.status === 'pending').length;
@@ -300,7 +366,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const d = new Date(e.createdAt.seconds ? e.createdAt.seconds * 1000 : e.createdAt);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     }).reduce((sum, e) => sum + (e.cash || 0), 0);
-    catenaVendorCount = catenaVendorsList.length;
+    // Calculate total vendors: common vendors + maintenance vendors for Catena Cafe
+    const catenaCommonVendors = catenaVendorsList.length;
+    const catenaMaintenanceVendors = new Set(catenaMaintenanceList.map(m => m.vendorName).filter(name => name && name.trim() !== '')).size;
+    catenaVendorCount = catenaCommonVendors + catenaMaintenanceVendors;
+    console.log('Catena Cafe - Vendor count calculation:');
+    console.log('  Common vendors:', catenaCommonVendors);
+    console.log('  Maintenance vendors:', catenaMaintenanceVendors);
+    console.log('  Total vendors:', catenaVendorCount);
     catenaOpenMaintCount = catenaMaintenanceList.filter(m => m.status?.toLowerCase() !== 'done').length;
     catenaPaidPayments = catenaPaymentsList.filter(p => p.status === 'done' || p.status === 'paid').length;
     catenaPendingPayments = catenaPaymentsList.filter(p => p.status === 'pending').length;
@@ -482,7 +555,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
 
   return (
     <ScrollView style={{ flex: 1, padding: 16 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: PRIMARY_COLOR }}>{branchName} Dashboard</Text>
+      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 4, color: '#000000' }}>{branchName} Dashboard</Text>
       {isOrientElite && (
         <>
           <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
@@ -564,7 +637,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
           </View>
           {/* Section Header for Summary */}
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
             <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] } onPress={() => router.push('/hotel-orient-elite-sales-report')}>
@@ -626,7 +699,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       {isOjas && (
         <>
           {/* Chart for Ojas */}
-          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: OJAS_PRIMARY, borderWidth: 1 }}>
             <View style={{ position: 'relative' }}>
               <LineChart
                 data={{
@@ -705,58 +778,58 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
           </View>
           {/* Section Header for Summary */}
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
-              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodaySales}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
+              <MaterialCommunityIcons name="cash" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{ojasTodaySales}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Today&apos;s Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
-              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{ojasTodayExpenses}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
+              <MaterialCommunityIcons name="bank" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{ojasTodayExpenses}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Today&apos;s Expenses</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-vendors')}>
-              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasVendorCount}</Text>
-              <Text style={summaryStyles.label}>Vendors</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasVendorCount}</Text>
+              <Text style={getBranchStyles(branchId).label}>Vendors</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-riddhi-siddhi-hall')}>
-              <MaterialCommunityIcons name="party-popper" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Riddhi Siddhi Hall</Text>
-              <Text style={summaryStyles.label}>Riddhi Siddhi Hall</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-riddhi-siddhi-hall')}>
+              <MaterialCommunityIcons name="party-popper" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Riddhi Siddhi Hall</Text>
+              <Text style={getBranchStyles(branchId).label}>Riddhi Siddhi Hall</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/ojas-raw-materials' })}>
-              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
-              <Text style={summaryStyles.label}>Raw Materials</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/ojas-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Raw Materials</Text>
+              <Text style={getBranchStyles(branchId).label}>Raw Materials</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-foodbill-report')}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={summaryStyles.label}>Food Bill</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-foodbill-report')}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Food Bill</Text>
+              <Text style={getBranchStyles(branchId).label}>Food Bill</Text>
             </TouchableOpacity>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasOpenMaintCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="wrench" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasOpenMaintCount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Open Maintenance</Text>
             </View>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPaidPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="check-circle" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasPaidPayments}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Paid</Text>
             </View>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-payments-pending')}>
-              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasPendingPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Sales</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-payments-pending')}>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasPendingPayments}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expenses-pending')}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{ojasTodayPendingExpenseAmount}</Text>
-              <Text style={[summaryStyles.label, { color: '#e53935' }]}>Pending Expense</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expenses-pending')}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={32} color={OJAS_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasTodayPendingExpenseAmount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#e53935' }]}>Pending Expense</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -764,7 +837,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       {isCatenaCafe && (
         <>
           {/* Chart for Catena Cafe */}
-          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: PRIMARY_COLOR, borderWidth: 1 }}>
+          <View style={{ marginBottom: 32, backgroundColor: '#fff', borderRadius: 18, padding: 18, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 1, marginTop: 24, borderColor: CATENA_PRIMARY, borderWidth: 1 }}>
             <View style={{ position: 'relative' }}>
               <LineChart
                 data={{
@@ -843,53 +916,53 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
           </View>
           {/* Section Header for Summary */}
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#222', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-sales-report')}>
-              <MaterialCommunityIcons name="cash" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodaySales}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Sales</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-sales-report')}>
+              <MaterialCommunityIcons name="cash" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{catenaTodaySales}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Today&apos;s Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expense-report')}>
-              <MaterialCommunityIcons name="bank" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>₹{catenaTodayExpenses}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Today&apos;s Expenses</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expense-report')}>
+              <MaterialCommunityIcons name="bank" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{catenaTodayExpenses}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Today&apos;s Expenses</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-vendors')}>
-              <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaVendorCount}</Text>
-              <Text style={summaryStyles.label}>Vendors</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-vendors')}>
+              <MaterialCommunityIcons name="account-group" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaVendorCount}</Text>
+              <Text style={getBranchStyles(branchId).label}>Vendors</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/catena-raw-materials' })}>
-              <MaterialCommunityIcons name="shopping" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Raw Materials</Text>
-              <Text style={summaryStyles.label}>Raw Materials</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push({ pathname: '/catena-raw-materials' })}>
+              <MaterialCommunityIcons name="shopping" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Raw Materials</Text>
+              <Text style={getBranchStyles(branchId).label}>Raw Materials</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-foodbill-report')}>
-              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={summaryStyles.label}>Food Bill</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-foodbill-report')}>
+              <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Food Bill</Text>
+              <Text style={getBranchStyles(branchId).label}>Food Bill</Text>
             </TouchableOpacity>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaOpenMaintCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="wrench" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaOpenMaintCount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Open Maintenance</Text>
             </View>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
-              <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPaidPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Paid</Text>
+            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+              <MaterialCommunityIcons name="check-circle" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaPaidPayments}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Paid</Text>
             </View>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-payments-pending')}>
-              <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaPendingPayments}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Payments Sales</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-payments-pending')}>
+              <MaterialCommunityIcons name="clock-outline" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaPendingPayments}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Sales</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expenses-pending')}>
-              <MaterialCommunityIcons name="alert-circle-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{catenaTodayPendingExpenseAmount}</Text>
-              <Text style={[summaryStyles.label, { color: '#e53935' }]}>Pending Expense</Text>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expenses-pending')}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaTodayPendingExpenseAmount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#e53935' }]}>Pending Expense</Text>
             </TouchableOpacity>
           </View>
         </>

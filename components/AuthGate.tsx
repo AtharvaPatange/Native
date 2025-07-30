@@ -1,12 +1,18 @@
 import { auth, db } from '@/constants/firebaseConfig';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
+import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
-import { Avatar, Button, Surface, Text, TextInput } from 'react-native-paper';
+import { Button, Surface, Text, TextInput } from 'react-native-paper';
 import { useAuth } from './AuthContext';
+
+const PRIMARY_COLOR = '#e0a86b';
+const SECONDARY_COLOR = '#e2af7a';
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -32,10 +38,27 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         style={styles.bg}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        <LinearGradient
+          colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
+          style={StyleSheet.absoluteFill}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        />
         <View style={styles.centered}>
           <Surface style={styles.card} elevation={5}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <Avatar.Icon size={64} icon={isRegister ? 'account-plus' : 'login'} color="#fff" style={{ backgroundColor: '#1976d2' }} />
+            <View style={{ alignItems: 'center', marginBottom: 24 }}>
+              <LinearGradient
+                colors={[PRIMARY_COLOR, SECONDARY_COLOR]}
+                style={styles.avatarBackground}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <MaterialCommunityIcons
+                  name={isRegister ? 'account-plus' : 'login'}
+                  size={40}
+                  color="#fff"
+                />
+              </LinearGradient>
             </View>
             <Text style={styles.title}>{isRegister ? 'Create Account' : 'Sign In'}</Text>
             <TextInput
@@ -46,7 +69,9 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
               keyboardType="email-address"
               style={styles.input}
               mode="outlined"
-              left={<TextInput.Icon icon="email" />}
+              outlineColor={PRIMARY_COLOR}
+              activeOutlineColor={SECONDARY_COLOR}
+              left={<TextInput.Icon icon="email" color={PRIMARY_COLOR} />}
             />
             <TextInput
               placeholder="Password"
@@ -55,25 +80,31 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
               secureTextEntry
               style={styles.input}
               mode="outlined"
-              left={<TextInput.Icon icon="lock" />}
+              outlineColor={PRIMARY_COLOR}
+              activeOutlineColor={SECONDARY_COLOR}
+              left={<TextInput.Icon icon="lock" color={PRIMARY_COLOR} />}
             />
             {isRegister && (
-              <View style={{ marginBottom: 14 }}>
-                <Text style={{ marginBottom: 4, color: '#1976d2', fontWeight: 'bold' }}>Select Role</Text>
-                <Picker
-                  selectedValue={role}
-                  onValueChange={setRole}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Global Admin" value="globalAdmin" />
-                  <Picker.Item label="Admin" value="admin" />
-                  <Picker.Item label="Operator" value="operator" />
-                </Picker>
+              <View style={styles.roleContainer}>
+                <Text style={[styles.roleLabel, { color: PRIMARY_COLOR }]}>Select Role</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={role}
+                    onValueChange={setRole}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Global Admin" value="globalAdmin" color={PRIMARY_COLOR} />
+                    <Picker.Item label="Admin" value="admin" color={PRIMARY_COLOR} />
+                    <Picker.Item label="Operator" value="operator" color={PRIMARY_COLOR} />
+                  </Picker>
+                </View>
               </View>
             )}
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <Button
               mode="contained"
+              buttonColor={PRIMARY_COLOR}
+              textColor="#fff"
               onPress={async () => {
                 setSubmitting(true);
                 setError('');
@@ -84,6 +115,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                     await setDoc(doc(db, 'users', cred.user.uid), {
                       email,
                       role,
+                      createdAt: new Date(),
                     });
                     // Show welcome notification
                     console.log('Attempting to show welcome notification after registration');
@@ -99,10 +131,14 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
                     } catch (e) {
                       console.log('Notification error after registration:', e);
                     }
+                    // Navigate to tabs after successful registration
+                    router.replace('/(tabs)');
                   } else {
                     await signInWithEmailAndPassword(auth, email, password);
-                    // Show welcome notification
-                    console.log('Attempting to show welcome notification after login');
+                    // Navigate to tabs first
+                    router.replace('/(tabs)');
+                    
+                    // Then show welcome notification
                     try {
                       await Notifications.scheduleNotificationAsync({
                         content: {
@@ -132,6 +168,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
               mode="text"
               onPress={() => setIsRegister(!isRegister)}
               style={styles.switchButton}
+              textColor={SECONDARY_COLOR}
             >
               {isRegister ? 'Already have an account? Sign In' : 'Need an account? Register'}
             </Button>
@@ -149,16 +186,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: PRIMARY_COLOR,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: '#fff',
   },
   bg: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   centered: {
     flex: 1,
@@ -166,34 +202,62 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    padding: 20,
-    borderRadius: 12,
+    padding: 24,
+    borderRadius: 16,
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  avatarBackground: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
+    marginBottom: 24,
+    color: PRIMARY_COLOR,
   },
   input: {
-    marginBottom: 12,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+  },
+  roleContainer: {
+    marginBottom: 20,
+  },
+  roleLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: PRIMARY_COLOR,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    overflow: 'hidden',
   },
   picker: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    backgroundColor: '#f9f9f9',
+    height: 50,
   },
   error: {
     color: '#d32f2f',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    fontSize: 14,
   },
   button: {
-    marginTop: 8,
+    marginTop: 16,
     borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
   },
   switchButton: {
     marginTop: 16,

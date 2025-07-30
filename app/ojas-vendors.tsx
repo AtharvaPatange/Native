@@ -124,19 +124,38 @@ export default function OjasVendors() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f6fa' }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Text style={styles.title}>Maintenance Vendors</Text>
-        {loading ? <ActivityIndicator /> : (
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        {loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <ActivityIndicator size="large" color={PRIMARY_BROWN} />
+          </View>
+        ) : (
           <>
-            <VendorTable data={maintenanceVendors} />
-            <Button icon="download" mode="outlined" style={styles.pdfBtn} onPress={() => handleDownloadPDF('maintenance')}>
-              Download as PDF
-            </Button>
-            <Text style={styles.title}>Common Vendors</Text>
-            <CommonVendorTable data={commonVendors} />
-            <Button icon="download" mode="outlined" style={styles.pdfBtn} onPress={() => handleDownloadPDF('common')}>
-              Download as PDF
-            </Button>
+            <View style={styles.sectionContainer}>
+              <Text style={styles.title}>Maintenance Vendors</Text>
+              <VendorTable data={maintenanceVendors} />
+              <Button 
+                icon="download" 
+                mode="contained" 
+                style={styles.pdfBtn} 
+                textColor="#fff"
+                onPress={() => handleDownloadPDF('maintenance')}>
+                Download as PDF
+              </Button>
+            </View>
+
+            <View style={styles.sectionContainer}>
+              <Text style={styles.title}>Common Vendors</Text>
+              <CommonVendorTable data={commonVendors} />
+              <Button 
+                icon="download" 
+                mode="contained" 
+                style={styles.pdfBtn} 
+                textColor="#fff"
+                onPress={() => handleDownloadPDF('common')}>
+                Download as PDF
+              </Button>
+            </View>
           </>
         )}
       </ScrollView>
@@ -147,27 +166,31 @@ export default function OjasVendors() {
 function VendorTable({ data }: { data: any[] }) {
   return (
     <View style={styles.table}>
-      <View style={styles.tableHeader}>
-        <Text style={styles.tableHeaderCell}>Vendor Name</Text>
-        <Text style={styles.tableHeaderCell}>Phone</Text>
-        <Text style={styles.tableHeaderCell}>Payment</Text>
-        <Text style={styles.tableHeaderCell}>Status</Text>
-        <Text style={styles.tableHeaderCell}>Description</Text>
-        <Text style={styles.tableHeaderCell}>Room</Text>
-        <Text style={styles.tableHeaderCell}>Date</Text>
-      </View>
-      {data.length === 0 && <Text style={{ color: '#888', marginVertical: 8 }}>No maintenance vendors found.</Text>}
-      {data.map((v, i) => (
-        <View key={i} style={styles.tableRow}>
-          <Text style={styles.tableCell}>{v.vendorName}</Text>
-          <Text style={styles.tableCell}>{v.vendorPhone}</Text>
-          <Text style={styles.tableCell}>{v.paymentMode}</Text>
-          <Text style={styles.tableCell}>{v.status}</Text>
-          <Text style={styles.tableCell}>{v.desc}</Text>
-          <Text style={styles.tableCell}>{v.room}</Text>
-          <Text style={styles.tableCell}>{v.createdAt && v.createdAt.toDate ? v.createdAt.toDate().toLocaleDateString() : ''}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+        <View style={styles.tableContent}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { minWidth: 120 }]}>Vendor Name</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 100 }]}>Phone</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 100 }]}>Payment</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 100 }]}>Status</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 150 }]}>Description</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 80 }]}>Room</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 100 }]}>Date</Text>
+          </View>
+          {data.length === 0 && <Text style={{ color: '#888', marginVertical: 8, paddingHorizontal: 16 }}>No maintenance vendors found.</Text>}
+          {data.map((v, i) => (
+            <View key={i} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { minWidth: 120 }]}>{v.vendorName}</Text>
+              <Text style={[styles.tableCell, { minWidth: 100 }]}>{v.vendorPhone}</Text>
+              <Text style={[styles.tableCell, { minWidth: 100 }]}>{v.paymentMode}</Text>
+              <Text style={[styles.tableCell, { minWidth: 100 }]}>{v.status}</Text>
+              <Text style={[styles.tableCell, { minWidth: 150 }]}>{v.desc}</Text>
+              <Text style={[styles.tableCell, { minWidth: 80 }]}>{v.room}</Text>
+              <Text style={[styles.tableCell, { minWidth: 100 }]}>{v.createdAt && v.createdAt.toDate ? v.createdAt.toDate().toLocaleDateString() : ''}</Text>
+            </View>
+          ))}
         </View>
-      ))}
+      </ScrollView>
     </View>
   );
 }
@@ -191,11 +214,75 @@ function CommonVendorTable({ data }: { data: any[] }) {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 18, color: '#111' },
-  table: { backgroundColor: '#fff', borderRadius: 10, marginBottom: 16, padding: 8, elevation: 1, borderColor: PRIMARY_BROWN },
-  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderColor: SECONDARY_BROWN, paddingBottom: 4, backgroundColor: SECONDARY_BROWN },
-  tableHeaderCell: { flex: 1, fontWeight: 'bold', color: '#111', fontSize: 13 },
-  tableRow: { flexDirection: 'row', borderBottomWidth: 1, borderColor: '#eee', paddingVertical: 4 },
-  tableCell: { flex: 1, color: '#111', fontSize: 13 },
-  pdfBtn: { marginVertical: 8, alignSelf: 'flex-end', backgroundColor: PRIMARY_BROWN },
+  sectionContainer: {
+    marginBottom: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableContent: {
+    minWidth: '100%',
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    marginBottom: 20, 
+    color: '#111',
+    paddingHorizontal: 8
+  },
+  table: { 
+    backgroundColor: '#fff', 
+    borderRadius: 12, 
+    marginBottom: 20, 
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden'
+  },
+  tableHeader: { 
+    flexDirection: 'row', 
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: PRIMARY_BROWN,
+    borderBottomWidth: 1, 
+    borderColor: SECONDARY_BROWN
+  },
+  tableHeaderCell: { 
+    fontWeight: 'bold', 
+    color: '#fff', 
+    fontSize: 14,
+    textAlign: 'center',
+    marginHorizontal: 8,
+    paddingHorizontal: 8
+  },
+  tableRow: { 
+    flexDirection: 'row', 
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1, 
+    borderColor: '#eee',
+    backgroundColor: '#fff'
+  },
+  tableCell: { 
+    color: '#333', 
+    fontSize: 14,
+    textAlign: 'center',
+    marginHorizontal: 8,
+    paddingHorizontal: 8
+  },
+  pdfBtn: { 
+    alignSelf: 'flex-end', 
+    marginBottom: 24,
+    marginTop: 8,
+    backgroundColor: PRIMARY_BROWN,
+    borderRadius: 8,
+    paddingHorizontal: 16
+  },
 }); 

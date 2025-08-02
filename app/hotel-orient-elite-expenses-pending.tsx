@@ -76,6 +76,8 @@ export default function HotelOrientEliteExpensesPending() {
           <tr>
             <th>Amount</th>
             <th>Type</th>
+            <th>Vendor</th>
+            <th>Payment Mode</th>
             <th>Status</th>
             <th>Date</th>
           </tr>
@@ -84,7 +86,9 @@ export default function HotelOrientEliteExpensesPending() {
           ${expenses.map(e => `
             <tr>
               <td>₹${e.cash || 0}</td>
-              <td>${e.type || '-'}</td>
+              <td>${e.isVendorPayment ? 'Vendor Payment' : (e.type || '-')}</td>
+              <td>${e.isVendorPayment ? (e.vendorName || '-') : '-'}</td>
+              <td>${e.isVendorPayment ? (e.vendorPaymentMode || '-') : '-'}</td>
               <td>${e.status || '-'}</td>
               <td>${formatDate(e.createdAt)}</td>
             </tr>
@@ -150,15 +154,15 @@ export default function HotelOrientEliteExpensesPending() {
             <View style={styles.filterRow}>
               <View style={styles.pickerContainer}>
                 <MaterialCommunityIcons name="filter-variant" size={20} color={PRIMARY_COLOR} />
-                <Picker
-                  selectedValue={filterStatus}
-                  onValueChange={v => setFilterStatus(v)}
+        <Picker
+          selectedValue={filterStatus}
+          onValueChange={v => setFilterStatus(v)}
                   style={styles.picker}
-                >
-                  <Picker.Item label="Pending" value="pending" />
+        >
+          <Picker.Item label="Pending" value="pending" />
                   <Picker.Item label="Completed" value="done" />
-                </Picker>
-              </View>
+        </Picker>
+      </View>
             </View>
             
             <View style={styles.dateRow}>
@@ -223,7 +227,9 @@ export default function HotelOrientEliteExpensesPending() {
                     />
                     <View style={styles.expenseDetails}>
                       <Text style={styles.expenseAmount}>₹{(expense.cash || 0).toLocaleString()}</Text>
-                      <Text style={styles.expenseType}>{expense.type || 'Cash'}</Text>
+                      <Text style={styles.expenseType}>
+                        {expense.isVendorPayment ? `Vendor Payment - ${expense.vendorName || 'Unknown'}` : (expense.type || 'Cash')}
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.statusContainer}>
@@ -271,7 +277,7 @@ export default function HotelOrientEliteExpensesPending() {
             icon="arrow-left"
           >
             Back
-          </Button>
+        </Button>
           <Button 
             mode="contained" 
             onPress={handleDownloadReport} 
@@ -280,8 +286,8 @@ export default function HotelOrientEliteExpensesPending() {
             icon="download"
           >
             Download Report
-          </Button>
-        </View>
+        </Button>
+      </View>
       </ScrollView>
 
       {/* Date Pickers */}
@@ -340,14 +346,44 @@ export default function HotelOrientEliteExpensesPending() {
                   <Text style={styles.dialogLabel}>Date:</Text>
                   <Text style={styles.dialogValue}>{formatDate(selected.createdAt)}</Text>
                 </View>
+                
+                {/* Vendor Payment Details */}
+                {selected.isVendorPayment && (
+                  <>
+                    <View style={styles.dialogRow}>
+                      <MaterialCommunityIcons name="account-group" size={20} color={PRIMARY_COLOR} />
+                      <Text style={styles.dialogLabel}>Vendor Name:</Text>
+                      <Text style={styles.dialogValue}>{selected.vendorName || '-'}</Text>
+                    </View>
+                    <View style={styles.dialogRow}>
+                      <MaterialCommunityIcons name="credit-card" size={20} color={PRIMARY_COLOR} />
+                      <Text style={styles.dialogLabel}>Payment Mode:</Text>
+                      <Text style={styles.dialogValue}>{selected.vendorPaymentMode || '-'}</Text>
+                    </View>
+                    {selected.vendorStartDate && selected.vendorEndDate && (
+                      <>
+                        <View style={styles.dialogRow}>
+                          <MaterialCommunityIcons name="calendar-start" size={20} color={PRIMARY_COLOR} />
+                          <Text style={styles.dialogLabel}>Start Date:</Text>
+                          <Text style={styles.dialogValue}>{formatDate(selected.vendorStartDate)}</Text>
+                        </View>
+                        <View style={styles.dialogRow}>
+                          <MaterialCommunityIcons name="calendar-end" size={20} color={PRIMARY_COLOR} />
+                          <Text style={styles.dialogLabel}>End Date:</Text>
+                          <Text style={styles.dialogValue}>{formatDate(selected.vendorEndDate)}</Text>
+                        </View>
+                      </>
+                    )}
+                  </>
+                )}
               </View>
             )}
             <View style={styles.statusSelector}>
               <Text style={styles.statusSelectorLabel}>Update Status:</Text>
-              <RadioButton.Group onValueChange={v => setEditStatus(v as 'pending' | 'done')} value={editStatus}>
+            <RadioButton.Group onValueChange={v => setEditStatus(v as 'pending' | 'done')} value={editStatus}>
                 <RadioButton.Item label="Pending" value="pending" color={PRIMARY_COLOR} />
                 <RadioButton.Item label="Completed" value="done" color={PRIMARY_COLOR} />
-              </RadioButton.Group>
+            </RadioButton.Group>
             </View>
           </Dialog.Content>
           <Dialog.Actions>

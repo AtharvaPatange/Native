@@ -653,7 +653,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/hotel-orient-elite-vendors')}>
               <MaterialCommunityIcons name="account-group" size={32} color={SECONDARY_COLOR} />
               <Text style={[summaryStyles.value, { color: '#111' }]}>{vendorCount}</Text>
-              <Text style={summaryStyles.label}>Vendors</Text>
+              <Text style={summaryStyles.label}>All Vendors</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff' }]} onPress={() => router.push('/hotel-orient-elite-rooms')}>
               <MaterialCommunityIcons name="bed" size={32} color={SECONDARY_COLOR} />
@@ -670,11 +670,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               <Text style={[summaryStyles.value, { color: '#111' }]}>{activeDormBedsCount}</Text>
               <Text style={summaryStyles.label}>Dormitory Beds</Text>
             </TouchableOpacity>
-            <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+            <TouchableOpacity 
+              style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} 
+              onPress={() => router.push('/hotel-orient-elite-maintenance-payments')}
+            >
               <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
               <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
-            </View>
+            </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <TouchableOpacity onPress={() => router.push('/hotel-orient-elite-payments-paid')} style={{ alignItems: 'center' }}>
               <MaterialCommunityIcons name="check-circle" size={32} color={SECONDARY_COLOR} />

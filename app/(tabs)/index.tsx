@@ -2,11 +2,12 @@ import { useAuth } from '@/components/AuthContext';
 import HotelDashboard from '@/components/HotelDashboard';
 import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { addDoc, collection } from 'firebase/firestore';
-import React, { useState } from 'react';
-import { Alert, Modal, ScrollView, StyleSheet, View } from 'react-native';
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
 const PRIMARY_COLOR = '#e0a86b';
@@ -15,6 +16,21 @@ const SECONDARY_COLOR = '#e2af7a';
 export default function HotelOrientEliteScreen() {
   const { user, loading } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  
+  // Fetch vendors for dropdown
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const vendorsQuery = query(collection(db, 'vendors'), where('branchId', '==', 'orientElite'));
+        const vendorsSnapshot = await getDocs(vendorsQuery);
+        const vendorsData = vendorsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setVendors(vendorsData);
+      } catch (error) {
+        console.error('Error fetching vendors:', error);
+      }
+    };
+    fetchVendors();
+  }, []);
   // Sale form
   const [saleCash, setSaleCash] = useState('');
   const [saleType, setSaleType] = useState('online');
@@ -36,7 +52,15 @@ export default function HotelOrientEliteScreen() {
   // Payment form
   const [payVendor, setPayVendor] = useState('');
   const [payAmount, setPayAmount] = useState('');
+  const [payPaymentMode, setPayPaymentMode] = useState('cash');
   const [payStatus, setPayStatus] = useState('pending');
+  const [payStartDate, setPayStartDate] = useState(new Date());
+  const [payEndDate, setPayEndDate] = useState(new Date());
+  const [showPayStartPicker, setShowPayStartPicker] = useState(false);
+  const [showPayEndPicker, setShowPayEndPicker] = useState(false);
+  const [vendors, setVendors] = useState<any[]>([]);
+  const [showVendorDropdown, setShowVendorDropdown] = useState(false);
+  const [vendorSearchText, setVendorSearchText] = useState('');
   // Food Bill form
   const [foodBillAmount, setFoodBillAmount] = useState('');
   const [foodBillPaymentMode, setFoodBillPaymentMode] = useState('cash');
@@ -122,20 +146,31 @@ export default function HotelOrientEliteScreen() {
     }
   };
   const handleAddPayment = async () => {
+    if (!payVendor || !payAmount) {
+      Alert.alert('Error', 'Please fill all required fields');
+      return;
+    }
     try {
       await addDoc(collection(db, 'vendorPayments'), {
         vendor: payVendor,
         amount: Number(payAmount),
+        paymentMode: payPaymentMode,
         status: payStatus,
-        branchId,
+        startDate: payStartDate,
+        endDate: payEndDate,
+        branchId: 'orientElite',
         createdAt: new Date(),
         createdBy: user?.email || 'guest',
       });
       setPayVendor('');
       setPayAmount('');
+      setPayPaymentMode('cash');
       setPayStatus('pending');
+      setPayStartDate(new Date());
+      setPayEndDate(new Date());
       Alert.alert('Success', 'Vendor payment added!');
-    } catch {
+    } catch (error) {
+      console.error('Error adding payment:', error);
       Alert.alert('Error', 'Failed to add vendor payment.');
     }
   };
@@ -279,8 +314,107 @@ export default function HotelOrientEliteScreen() {
               <Button mode="contained" onPress={handleAddMaintenance} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Maintenance</Button>
               {/* 5. Vendor Payment */}
               <Text style={styles.sectionTitleNew}>Vendor Payment</Text>
-              <TextInput placeholder="Vendor Name" value={payVendor} onChangeText={setPayVendor} style={styles.inputNew} placeholderTextColor="#888" />
+              
+              {/* Vendor Name Dropdown */}
+              <View style={styles.dropdownContainer}>
+                <TouchableOpacity 
+                  style={styles.dropdownButton} 
+                  onPress={() => setShowVendorDropdown(!showVendorDropdown)}
+                >
+                  <Text style={[styles.dropdownButtonText, { color: payVendor ? '#222' : '#888' }]}>
+                    {payVendor || 'Select Vendor'}
+                  </Text>
+                  <MaterialCommunityIcons 
+                    name={showVendorDropdown ? "chevron-up" : "chevron-down"} 
+                    size={20} 
+                    color="#888" 
+                  />
+                </TouchableOpacity>
+                {showVendorDropdown && (
+                  <View style={styles.dropdownList}>
+                    <TextInput
+                      placeholder="Search vendors..."
+                      value={vendorSearchText}
+                      onChangeText={setVendorSearchText}
+                      style={styles.searchInput}
+                      placeholderTextColor="#888"
+                    />
+                    <ScrollView style={styles.dropdownScroll}>
+                      {vendors
+                        .filter(vendor => 
+                          vendor.name.toLowerCase().includes(vendorSearchText.toLowerCase())
+                        )
+                        .map((vendor) => (
+                          <TouchableOpacity
+                            key={vendor.id}
+                            style={styles.dropdownItem}
+                            onPress={() => {
+                              setPayVendor(vendor.name);
+                              setShowVendorDropdown(false);
+                              setVendorSearchText('');
+                            }}
+                          >
+                            <Text style={styles.dropdownItemText}>{vendor.name}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      {vendorSearchText && vendors.filter(vendor => 
+                        vendor.name.toLowerCase().includes(vendorSearchText.toLowerCase())
+                      ).length === 0 && (
+                        <TouchableOpacity
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setPayVendor(vendorSearchText);
+                            setShowVendorDropdown(false);
+                            setVendorSearchText('');
+                          }}
+                        >
+                          <Text style={styles.dropdownItemText}>Add "{vendorSearchText}"</Text>
+                        </TouchableOpacity>
+                      )}
+                    </ScrollView>
+                  </View>
+                )}
+              </View>
+              
               <TextInput placeholder="Amount" value={payAmount} onChangeText={setPayAmount} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              
+              {/* Payment Mode Dropdown */}
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={payPaymentMode}
+                  onValueChange={setPayPaymentMode}
+                  style={styles.pickerNew}
+                  itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}>
+                  <Picker.Item label="Cash" value="cash" />
+                  <Picker.Item label="Online" value="online" />
+                  <Picker.Item label="Bank Transfer" value="bank" />
+                  <Picker.Item label="Card" value="card" />
+                </Picker>
+              </View>
+              
+              {/* Start Date */}
+              <TouchableOpacity 
+                style={styles.dateButton} 
+                onPress={() => setShowPayStartPicker(true)}
+              >
+                <MaterialCommunityIcons name="calendar" size={20} color="#888" />
+                <Text style={styles.dateButtonText}>
+                  Start Date: {payStartDate.toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+              
+              {/* End Date */}
+              <TouchableOpacity 
+                style={styles.dateButton} 
+                onPress={() => setShowPayEndPicker(true)}
+              >
+                <MaterialCommunityIcons name="calendar" size={20} color="#888" />
+                <Text style={styles.dateButtonText}>
+                  End Date: {payEndDate.toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+              
+              {/* Status Dropdown */}
               <View style={styles.pickerWrapper}>
                 <Picker
                   selectedValue={payStatus}
@@ -291,6 +425,7 @@ export default function HotelOrientEliteScreen() {
                   <Picker.Item label="Done" value="done" />
                 </Picker>
               </View>
+              
               <Button mode="contained" onPress={handleAddPayment} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Payment</Button>
               {/* 6. Food Bill */}
               <Text style={styles.sectionTitleNew}>Food Bill</Text>
@@ -328,6 +463,35 @@ export default function HotelOrientEliteScreen() {
           </ScrollView>
         </View>
       </Modal>
+      
+      {/* Date Pickers */}
+      {showPayStartPicker && (
+        <DateTimePicker
+          value={payStartDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowPayStartPicker(false);
+            if (selectedDate) {
+              setPayStartDate(selectedDate);
+            }
+          }}
+        />
+      )}
+      
+      {showPayEndPicker && (
+        <DateTimePicker
+          value={payEndDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowPayEndPicker(false);
+            if (selectedDate) {
+              setPayEndDate(selectedDate);
+            }
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -463,5 +627,77 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 0.5,
+  },
+  dropdownContainer: {
+    position: 'relative',
+    width: 260,
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    padding: 16,
+    minHeight: 56,
+  },
+  dropdownButtonText: {
+    fontSize: 16,
+    color: '#222',
+  },
+  dropdownList: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    maxHeight: 120,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  searchInput: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    padding: 12,
+    fontSize: 16,
+  },
+  dropdownScroll: {
+    maxHeight: 80,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  dropdownItemText: {
+    fontSize: 16,
+    color: '#222',
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    minHeight: 56,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#222',
+    marginLeft: 12,
   },
 }); 

@@ -45,7 +45,9 @@ export default function RootLayout() {
               <Stack.Screen name="index" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="auth" />
-              <Stack.Screen name="staff" />
+                          <Stack.Screen name="staff" />
+            <Stack.Screen name="hotel-orient-elite-maintenance-payments" />
+            <Stack.Screen name="hotel-orient-elite-all-vendor-payments" />
               <Stack.Screen 
                 name="+not-found" 
                 options={{

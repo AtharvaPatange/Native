@@ -148,15 +148,15 @@ export default function HotelOrientElitePaymentsPending() {
             <View style={styles.filterRow}>
               <View style={styles.pickerContainer}>
                 <MaterialCommunityIcons name="filter-variant" size={20} color={PRIMARY_COLOR} />
-                <Picker
-                  selectedValue={filterStatus}
-                  onValueChange={v => setFilterStatus(v)}
+        <Picker
+          selectedValue={filterStatus}
+          onValueChange={v => setFilterStatus(v)}
                   style={styles.picker}
-                >
-                  <Picker.Item label="Pending" value="pending" />
+        >
+          <Picker.Item label="Pending" value="pending" />
                   <Picker.Item label="Completed" value="done" />
-                </Picker>
-              </View>
+        </Picker>
+      </View>
             </View>
             
             <View style={styles.dateRow}>
@@ -269,7 +269,7 @@ export default function HotelOrientElitePaymentsPending() {
             icon="arrow-left"
           >
             Back
-          </Button>
+        </Button>
           <Button 
             mode="contained" 
             onPress={handleDownloadReport} 
@@ -278,8 +278,8 @@ export default function HotelOrientElitePaymentsPending() {
             icon="download"
           >
             Download Report
-          </Button>
-        </View>
+        </Button>
+      </View>
       </ScrollView>
 
       {/* Date Pickers */}
@@ -342,10 +342,10 @@ export default function HotelOrientElitePaymentsPending() {
             )}
             <View style={styles.statusSelector}>
               <Text style={styles.statusSelectorLabel}>Update Status:</Text>
-              <RadioButton.Group onValueChange={setStatus} value={status}>
+            <RadioButton.Group onValueChange={setStatus} value={status}>
                 <RadioButton.Item label="Pending" value="pending" color={PRIMARY_COLOR} />
                 <RadioButton.Item label="Completed" value="done" color={PRIMARY_COLOR} />
-              </RadioButton.Group>
+            </RadioButton.Group>
             </View>
           </Dialog.Content>
           <Dialog.Actions>

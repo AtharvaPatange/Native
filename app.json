@@ -42,8 +42,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "34a79a2a-a7d2-4628-b466-95749dcb3c67"
+        "projectId": "7490b476-641b-4808-b781-5215a72a29d2"
       }
-    }
+    },
+    "owner": "siddharam1"
   }
 }

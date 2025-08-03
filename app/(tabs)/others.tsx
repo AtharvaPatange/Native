@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { addDoc, collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, DataTable, Text, TextInput } from 'react-native-paper';
@@ -28,6 +28,8 @@ export default function OthersScreen() {
   const router = useRouter();
   const [modalVisible, setModalVisible] = useState(false);
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [selectedTransaction, setSelectedTransaction] = useState<PaymentTransaction | null>(null);
+  const [showTransactionDetails, setShowTransactionDetails] = useState(false);
   
   // Payment form state
   const [wherePaid, setWherePaid] = useState('');
@@ -110,6 +112,36 @@ export default function OthersScreen() {
     }
   };
 
+  const handleDeleteTransaction = async () => {
+    if (!selectedTransaction) return;
+
+    Alert.alert(
+      'Delete Transaction',
+      `Are you sure you want to delete this transaction?\n\nWhere Paid: ${selectedTransaction.wherePaid}\nAmount: ₹${selectedTransaction.amount.toLocaleString()}`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'paymentTransactions', selectedTransaction.id));
+              setShowTransactionDetails(false);
+              setSelectedTransaction(null);
+              Alert.alert('Success', 'Transaction deleted successfully!');
+            } catch (error) {
+              console.error('Error deleting transaction:', error);
+              Alert.alert('Error', 'Failed to delete transaction.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -179,10 +211,10 @@ export default function OthersScreen() {
             <View style={styles.tableContainer}>
               <DataTable>
                 <DataTable.Header style={styles.tableHeader}>
-                  <DataTable.Title style={[styles.column, { flex: 2 }]}>
+                  <DataTable.Title style={[styles.column, { flex: 2.5 }]}>
                     <Text style={styles.headerText}>Where Paid</Text>
                   </DataTable.Title>
-                  <DataTable.Title style={[styles.column, { flex: 1 }]}>
+                  <DataTable.Title style={[styles.column, { flex: 2.2 }]}>
                     <Text style={styles.headerText}>Amount</Text>
                   </DataTable.Title>
                   <DataTable.Title style={[styles.column, { flex: 1.8 }]}>
@@ -191,18 +223,25 @@ export default function OthersScreen() {
                 </DataTable.Header>
 
                 {transactions.map((transaction, index) => (
-                  <DataTable.Row key={transaction.id} style={[
-                    styles.tableRow,
-                    index % 2 === 0 ? styles.evenRow : styles.oddRow
-                  ]}>
-                    <DataTable.Cell style={[styles.column, { flex: 2 }]}>
-                      <Text style={styles.cellText} numberOfLines={2}>{transaction.wherePaid}</Text>
+                  <DataTable.Row 
+                    key={transaction.id} 
+                    style={[
+                      styles.tableRow,
+                      index % 2 === 0 ? styles.evenRow : styles.oddRow
+                    ]}
+                    onPress={() => {
+                      setSelectedTransaction(transaction);
+                      setShowTransactionDetails(true);
+                    }}
+                  >
+                    <DataTable.Cell style={[styles.column, { flex: 2.5 }]}>
+                      <Text style={styles.cellText} numberOfLines={1}>{transaction.wherePaid}</Text>
                     </DataTable.Cell>
-                    <DataTable.Cell style={[styles.column, { flex: 1 }]}>
-                      <Text style={styles.amountText}>₹{transaction.amount}</Text>
+                    <DataTable.Cell style={[styles.column, { flex: 2.2 }]}>
+                      <Text style={styles.amountText} numberOfLines={1}>₹{transaction.amount}</Text>
                     </DataTable.Cell>
                     <DataTable.Cell style={[styles.column, { flex: 1.8 }]}>
-                      <Text style={styles.cellText}>{transaction.date}</Text>
+                      <Text style={styles.cellText} numberOfLines={1}>{transaction.date}</Text>
                     </DataTable.Cell>
                   </DataTable.Row>
                 ))}
@@ -229,18 +268,23 @@ export default function OthersScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <ScrollView style={styles.modalScroll} contentContainerStyle={{ paddingBottom: 32 }}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Add Payment Transaction</Text>
-                <TouchableOpacity 
-                  style={styles.closeButton}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <MaterialCommunityIcons name="close" size={24} color="#666" />
-                </TouchableOpacity>
-              </View>
-              
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Payment Transaction</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <MaterialCommunityIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView 
+              style={styles.modalScroll} 
+              contentContainerStyle={styles.modalScrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
               <Text style={styles.inputLabel}>Where Paid *</Text>
               <TextInput 
                 placeholder="Enter where the payment was made" 
@@ -248,6 +292,7 @@ export default function OthersScreen() {
                 onChangeText={setWherePaid} 
                 style={styles.input} 
                 mode="outlined"
+                returnKeyType="next"
               />
 
               <Text style={styles.inputLabel}>Date *</Text>
@@ -276,6 +321,7 @@ export default function OthersScreen() {
                 onChangeText={setTime} 
                 style={styles.input} 
                 mode="outlined"
+                returnKeyType="next"
               />
 
               <Text style={styles.inputLabel}>Amount Paid *</Text>
@@ -286,6 +332,7 @@ export default function OthersScreen() {
                 keyboardType="numeric"
                 style={styles.input} 
                 mode="outlined"
+                returnKeyType="next"
               />
 
               <Text style={styles.inputLabel}>Notes (Optional)</Text>
@@ -297,6 +344,8 @@ export default function OthersScreen() {
                 numberOfLines={3}
                 style={styles.input} 
                 mode="outlined"
+                returnKeyType="done"
+                blurOnSubmit={true}
               />
 
               <Button 
@@ -307,10 +356,146 @@ export default function OthersScreen() {
               >
                 Save Transaction
               </Button>
-            </View>
-          </ScrollView>
+            </ScrollView>
+          </View>
         </View>
       </Modal>
+
+      {/* Transaction Details Modal */}
+      <Modal
+        visible={showTransactionDetails}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowTransactionDetails(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalTitleContainer}>
+                <MaterialCommunityIcons name="cash-multiple" size={24} color={PRIMARY_COLOR} style={styles.modalTitleIcon} />
+                <Text style={styles.modalTitle}>Transaction Details</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setShowTransactionDetails(false)}
+              >
+                <MaterialCommunityIcons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedTransaction && (
+              <ScrollView style={styles.detailsScrollView}>
+                <View style={styles.detailsContainer}>
+                  <View style={styles.detailCard}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailIconContainer}>
+                        <MaterialCommunityIcons name="map-marker" size={20} color={PRIMARY_COLOR} />
+                      </View>
+                      <View style={styles.detailContent}>
+                        <Text style={styles.detailLabel}>Where Paid</Text>
+                        <Text style={styles.detailValue}>{selectedTransaction.wherePaid}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.detailCard}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailIconContainer}>
+                        <MaterialCommunityIcons name="currency-inr" size={20} color={PRIMARY_COLOR} />
+                      </View>
+                      <View style={styles.detailContent}>
+                        <Text style={styles.detailLabel}>Amount</Text>
+                        <Text style={styles.amountValue}>₹{selectedTransaction.amount.toLocaleString()}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.detailCard}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailIconContainer}>
+                        <MaterialCommunityIcons name="calendar" size={20} color={PRIMARY_COLOR} />
+                      </View>
+                      <View style={styles.detailContent}>
+                        <Text style={styles.detailLabel}>Date</Text>
+                        <Text style={styles.detailValue}>{selectedTransaction.date}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  {selectedTransaction.time && (
+                    <View style={styles.detailCard}>
+                      <View style={styles.detailRow}>
+                        <View style={styles.detailIconContainer}>
+                          <MaterialCommunityIcons name="clock" size={20} color={PRIMARY_COLOR} />
+                        </View>
+                        <View style={styles.detailContent}>
+                          <Text style={styles.detailLabel}>Time</Text>
+                          <Text style={styles.detailValue}>{selectedTransaction.time}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                  
+                  {selectedTransaction.notes && (
+                    <View style={styles.detailCard}>
+                      <View style={styles.detailRow}>
+                        <View style={styles.detailIconContainer}>
+                          <MaterialCommunityIcons name="note-text" size={20} color={PRIMARY_COLOR} />
+                        </View>
+                        <View style={styles.detailContent}>
+                          <Text style={styles.detailLabel}>Notes</Text>
+                          <Text style={styles.detailValue}>{selectedTransaction.notes}</Text>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                  
+                  <View style={styles.detailCard}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailIconContainer}>
+                        <MaterialCommunityIcons name="account" size={20} color={PRIMARY_COLOR} />
+                      </View>
+                      <View style={styles.detailContent}>
+                        <Text style={styles.detailLabel}>Created By</Text>
+                        <Text style={styles.detailValue}>{selectedTransaction.createdBy}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.detailCard}>
+                    <View style={styles.detailRow}>
+                      <View style={styles.detailIconContainer}>
+                        <MaterialCommunityIcons name="calendar-clock" size={20} color={PRIMARY_COLOR} />
+                      </View>
+                      <View style={styles.detailContent}>
+                        <Text style={styles.detailLabel}>Created At</Text>
+                        <Text style={styles.detailValue}>
+                          {selectedTransaction.createdAt.toLocaleDateString()} {selectedTransaction.createdAt.toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit', 
+                            hour12: true 
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+                
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={handleDeleteTransaction}
+                  >
+                    <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+                    <Text style={styles.deleteButtonText}>Delete Transaction</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
+
       {/* Action Buttons */}
       {userRole === 'globalAdmin' && (
         <View style={styles.actionButtonsContainer}>
@@ -482,6 +667,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#111',
     textAlign: 'center',
+    flexShrink: 1,
   },
   emptyState: {
     alignItems: 'center',
@@ -512,55 +698,79 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
+  modalScrollContent: {
+    paddingBottom: 32,
+  },
   modalContent: {
     backgroundColor: '#fff',
-    margin: 20,
-    borderRadius: 16,
+    margin: 16,
+    borderRadius: 20,
     padding: 24,
-    minHeight: 400,
+    minHeight: 600,
+    maxHeight: '95%',
+    width: '90%',
+    maxWidth: 400,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 28,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    position: 'relative',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#111',
+    flex: 1,
+    textAlign: 'center',
   },
   closeButton: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
     padding: 8,
+    zIndex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 12,
     color: '#111',
   },
   input: {
-    marginBottom: 16,
+    marginBottom: 24,
     backgroundColor: '#f9f9f9',
+    fontSize: 16,
   },
   dateTimeButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
     backgroundColor: '#f9f9f9',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   dateTimeButtonText: {
     fontSize: 16,
     color: '#111',
   },
   saveButton: {
-    marginTop: 16,
-    borderRadius: 8,
+    marginTop: 32,
+    borderRadius: 12,
+    paddingVertical: 12,
   },
   totalContainer: {
     marginTop: 16,
@@ -592,5 +802,83 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     borderRadius: 8,
+  },
+  detailsScrollView: {
+    flex: 1,
+  },
+  detailsContainer: {
+    paddingVertical: 8,
+  },
+  detailCard: {
+    backgroundColor: '#f8f8f8',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  detailIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(224, 168, 107, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 6,
+  },
+  detailValue: {
+    fontSize: 18,
+    color: '#111',
+    fontWeight: '500',
+    textAlign: 'left',
+  },
+  amountValue: {
+    fontSize: 22,
+    color: PRIMARY_COLOR,
+    fontWeight: 'bold',
+  },
+  modalTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalTitleIcon: {
+    marginRight: 8,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e74c3c',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 16,
+    shadowColor: '#e74c3c',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 }); 

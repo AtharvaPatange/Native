@@ -1,10 +1,17 @@
 import { useAuth } from '@/components/AuthContext';
+import CustomSplashScreen from '@/components/CustomSplashScreen';
 import { Redirect } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
   const { user, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Show custom splash screen on first load
+  if (showSplash) {
+    return <CustomSplashScreen onFinish={() => setShowSplash(false)} />;
+  }
 
   // Show loading spinner while checking authentication
   if (loading) {

@@ -3,14 +3,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { collection, getDocs, query, Timestamp, where } from 'firebase/firestore';
+import { collection, getDocs, query, Timestamp } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Button, Card, Dialog, Portal } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#e0a86b';
-const SECONDARY_COLOR = '#e2af7a';
-const DARK_GOLD = '#d4a574';
+const PRIMARY_COLOR = '#7FB069';
+const SECONDARY_COLOR = '#D4E6C3';
+const DARK_GREEN = '#1a3d1a';
 
 function formatDate(date: any) {
   if (!date) return '';
@@ -45,7 +45,7 @@ function getPaymentModeIcon(mode: string) {
   }
 }
 
-export default function HotelOrientEliteAllVendorPayments() {
+export default function CatenaCafeAllVendorPayments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
@@ -62,7 +62,7 @@ export default function HotelOrientEliteAllVendorPayments() {
   async function fetchAllPayments() {
     setLoading(true);
     try {
-      const q = query(collection(db, 'vendorPayments'), where('branchId', '==', 'orientElite'));
+      const q = query(collection(db, 'catenacafevendorpayments'));
       const snap = await getDocs(q);
       
       // Create date range for filtering
@@ -126,7 +126,7 @@ export default function HotelOrientEliteAllVendorPayments() {
 
   async function handleDownloadReport() {
     const html = `
-      <h2>Hotel Orient Elite All Vendor Payments Report</h2>
+      <h2>Catena Cafe All Vendor Payments Report</h2>
       <p>From: ${formatDate(startDate)} To: ${formatDate(endDate)}</p>
       <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead>
@@ -172,7 +172,7 @@ export default function HotelOrientEliteAllVendorPayments() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <MaterialCommunityIcons name="account-group" size={28} color={DARK_GOLD} />
+        <MaterialCommunityIcons name="account-group" size={28} color={DARK_GREEN} />
         <Text style={styles.header}>All Vendor Payments</Text>
         <Text style={styles.subHeader}>Complete vendor payment history</Text>
       </View>
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#6b4c1b',
+    color: '#1a3d1a',
     marginBottom: 4,
   },
   summaryValue: {

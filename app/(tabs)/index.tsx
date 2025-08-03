@@ -227,7 +227,7 @@ export default function HotelOrientEliteScreen() {
               <Text style={styles.modalTitleNew}>Add Entries</Text>
               {/* 1. Today's Total Sale */}
               <Text style={styles.sectionTitleNew}>Today&apos;s Total Sale</Text>
-              <TextInput placeholder="Cash" value={saleCash} onChangeText={setSaleCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Amount" value={saleCash} onChangeText={setSaleCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
               <View style={styles.pickerWrapper}>
                 <Picker
                   selectedValue={saleType}
@@ -235,6 +235,7 @@ export default function HotelOrientEliteScreen() {
                   style={styles.pickerNew}
                   itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
                 >
+                  <Picker.Item label="Cash" value="cash" />
                   <Picker.Item label="Online" value="online" />
                   <Picker.Item label="Card" value="card" />
                   <Picker.Item label="Bank Transfer" value="bank" />
@@ -254,7 +255,7 @@ export default function HotelOrientEliteScreen() {
               <Button mode="contained" onPress={handleAddSale} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Sale</Button>
               {/* 2. Today's Total Expense */}
               <Text style={styles.sectionTitleNew}>Today&apos;s Total Expense</Text>
-              <TextInput placeholder="Cash" value={expenseCash} onChangeText={setExpenseCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
+              <TextInput placeholder="Amount" value={expenseCash} onChangeText={setExpenseCash} keyboardType="numeric" style={styles.inputNew} placeholderTextColor="#888" />
               <View style={styles.pickerWrapper}>
                 <Picker
                   selectedValue={expenseType}
@@ -262,6 +263,7 @@ export default function HotelOrientEliteScreen() {
                   style={styles.pickerNew}
                   itemStyle={{fontSize: 15, height: 56, textAlignVertical: 'center', color: '#222'}}
                 >
+                  <Picker.Item label="Cash" value="cash" />
                   <Picker.Item label="Online" value="online" />
                   <Picker.Item label="Card" value="card" />
                   <Picker.Item label="Bank Transfer" value="bank" />

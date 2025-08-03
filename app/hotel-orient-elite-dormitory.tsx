@@ -25,6 +25,8 @@ export default function HotelOrientEliteDormitory() {
   const [time, setTime] = useState('');
   const [amount, setAmount] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [advancePaid, setAdvancePaid] = useState('');
+  const [remainingAmount, setRemainingAmount] = useState('');
 
   // Food bill state
   const [showFoodBill, setShowFoodBill] = useState(false);
@@ -54,13 +56,20 @@ export default function HotelOrientEliteDormitory() {
       Alert.alert('Error', 'Please fill all required fields');
       return;
     }
+    
+    const totalAmount = Number(amount);
+    const advance = Number(advancePaid) || 0;
+    const remaining = totalAmount - advance;
+    
     await setDoc(doc(db, 'orientEliteDormitory', selectedBed!), {
       status: 'active',
       guest: {
         checkin: checkin.toISOString().split('T')[0],
         checkout: checkout.toISOString().split('T')[0],
         time: time || null,
-        amount: Number(amount),
+        amount: totalAmount,
+        advancePaid: advance,
+        remainingAmount: remaining,
         paymentStatus,
       },
     });
@@ -71,6 +80,8 @@ export default function HotelOrientEliteDormitory() {
     setTime('');
     setAmount('');
     setPaymentStatus('pending');
+    setAdvancePaid('');
+    setRemainingAmount('');
   };
 
   const handleSetInactive = async () => {
@@ -192,6 +203,28 @@ export default function HotelOrientEliteDormitory() {
                 )}
                 <TextInput label="Time (optional)" value={time} onChangeText={setTime} style={styles.input} placeholder="HH:MM" />
                 <TextInput label="Amount" value={amount} onChangeText={setAmount} style={styles.input} keyboardType="numeric" />
+                <TextInput 
+                  label="Advance Paid" 
+                  value={advancePaid} 
+                  onChangeText={(text) => {
+                    setAdvancePaid(text);
+                    const total = Number(amount) || 0;
+                    const advance = Number(text) || 0;
+                    setRemainingAmount(String(Math.max(0, total - advance)));
+                  }} 
+                  style={styles.input} 
+                  keyboardType="numeric" 
+                  placeholder="0"
+                />
+                <TextInput 
+                  label="Remaining Amount" 
+                  value={remainingAmount} 
+                  onChangeText={setRemainingAmount} 
+                  style={styles.input} 
+                  keyboardType="numeric" 
+                  placeholder="0"
+                  editable={false}
+                />
                 <Text style={{ marginTop: 8, marginBottom: 4 }}>Payment Status</Text>
                 <RadioButton.Group onValueChange={setPaymentStatus} value={paymentStatus}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -279,9 +312,40 @@ export default function HotelOrientEliteDormitory() {
                     <Text style={styles.guestLabel}>Amount</Text>
                     <TextInput
                       value={amount !== '' ? amount : (guest(selectedBed!) && guest(selectedBed!).amount !== undefined ? String(guest(selectedBed!).amount) : '')}
-                      onChangeText={setAmount}
+                      onChangeText={(text) => {
+                        setAmount(text);
+                        const total = Number(text) || 0;
+                        const advance = Number(advancePaid) || 0;
+                        setRemainingAmount(String(Math.max(0, total - advance)));
+                      }}
                       style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
                       keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={styles.guestRow}>
+                    <Text style={styles.guestLabel}>Advance Paid</Text>
+                    <TextInput
+                      value={advancePaid !== '' ? advancePaid : (guest(selectedBed!) && guest(selectedBed!).advancePaid !== undefined ? String(guest(selectedBed!).advancePaid) : '0')}
+                      onChangeText={(text) => {
+                        setAdvancePaid(text);
+                        const total = Number(amount) || Number(guest(selectedBed!).amount) || 0;
+                        const advance = Number(text) || 0;
+                        setRemainingAmount(String(Math.max(0, total - advance)));
+                      }}
+                      style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
+                      keyboardType="numeric"
+                      placeholder="0"
+                    />
+                  </View>
+                  <View style={styles.guestRow}>
+                    <Text style={styles.guestLabel}>Remaining Amount</Text>
+                    <TextInput
+                      value={remainingAmount !== '' ? remainingAmount : (guest(selectedBed!) && guest(selectedBed!).remainingAmount !== undefined ? String(guest(selectedBed!).remainingAmount) : '0')}
+                      onChangeText={setRemainingAmount}
+                      style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
+                      keyboardType="numeric"
+                      placeholder="0"
+                      editable={false}
                     />
                   </View>
                   {/* Editable Payment Status */}
@@ -319,11 +383,17 @@ export default function HotelOrientEliteDormitory() {
                   )}
                   <Button mode="contained" style={styles.actionBtn} onPress={async () => {
                     // Save changes to checkout, amount, and payment status
+                    const totalAmount = Number(amount) || Number(guest(selectedBed!).amount) || 0;
+                    const advance = Number(advancePaid) || 0;
+                    const remaining = totalAmount - advance;
+                    
                     await setDoc(doc(db, 'orientEliteDormitory', selectedBed!), {
                       guest: {
                         ...guest(selectedBed!),
                         checkout: checkout ? checkout.toISOString().split('T')[0] : guest(selectedBed!).checkout,
-                        amount: amount !== '' ? Number(amount) : guest(selectedBed!).amount,
+                        amount: totalAmount,
+                        advancePaid: advance,
+                        remainingAmount: remaining,
                         paymentStatus,
                       },
                     }, { merge: true });

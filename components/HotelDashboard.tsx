@@ -162,9 +162,11 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   const [ojasVendorsList, setOjasVendorsList] = useState<any[]>([]);
   const [ojasMaintenanceList, setOjasMaintenanceList] = useState<any[]>([]);
   const [ojasPaymentsList, setOjasPaymentsList] = useState<any[]>([]);
+  const [ojasFoodBillsList, setOjasFoodBillsList] = useState<any[]>([]);
   // Ojas summary values
   let ojasTodaySales = 0, ojasTodayExpenses = 0, ojasVendorCount = 0, ojasOpenMaintCount = 0, ojasPaidPayments = 0, ojasPendingPayments = 0;
   let ojasTodayPendingExpenseAmount = 0;
+  let ojasTodayFoodBillAmount = 0;
   if (isOjas) {
     const now = new Date();
     ojasTodaySales = ojasSalesList.filter(s => {
@@ -200,6 +202,13 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       );
     });
     ojasTodayPendingExpenseAmount = ojasTodayPendingExpenses.reduce((sum, e) => sum + (e.cash || 0), 0);
+    
+    // Calculate today's food bill amount for Ojas
+    ojasTodayFoodBillAmount = ojasFoodBillsList.filter(fb => {
+      if (!fb.createdAt) return false;
+      const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, fb) => sum + (fb.amount || 0), 0);
   }
 
   // Prepare chart data for sales and expenses (last 7 days)
@@ -351,9 +360,11 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   const [catenaVendorsList, setCatenaVendorsList] = useState<any[]>([]);
   const [catenaMaintenanceList, setCatenaMaintenanceList] = useState<any[]>([]);
   const [catenaPaymentsList, setCatenaPaymentsList] = useState<any[]>([]);
+  const [catenaFoodBillsList, setCatenaFoodBillsList] = useState<any[]>([]);
   // Catena Cafe summary values
   let catenaTodaySales = 0, catenaTodayExpenses = 0, catenaVendorCount = 0, catenaOpenMaintCount = 0, catenaPaidPayments = 0, catenaPendingPayments = 0;
   let catenaTodayPendingExpenseAmount = 0;
+  let catenaTodayFoodBillAmount = 0;
   if (isCatenaCafe) {
     const now = new Date();
     catenaTodaySales = catenaSalesList.filter(s => {
@@ -389,6 +400,13 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       );
     });
     catenaTodayPendingExpenseAmount = catenaTodayPendingExpenses.reduce((sum, e) => sum + (e.cash || 0), 0);
+    
+    // Calculate today's food bill amount for Catena Cafe
+    catenaTodayFoodBillAmount = catenaFoodBillsList.filter(fb => {
+      if (!fb.createdAt) return false;
+      const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    }).reduce((sum, fb) => sum + (fb.amount || 0), 0);
   }
   // Catena Cafe chart data
   let catenaChartLabels: string[] = [];
@@ -508,7 +526,12 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const unsubPay = onSnapshot(payQ, snap => {
         setOjasPaymentsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
-      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
+      // Ojas Food Bills
+      const foodBillsQ = query(collection(db, 'ojasfoodbills'));
+      const unsubFoodBills = onSnapshot(foodBillsQ, snap => {
+        setOjasFoodBillsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); unsubFoodBills(); };
     }
     if (isCatenaCafe) {
       // Catena Cafe Sales
@@ -536,7 +559,12 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const unsubPay = onSnapshot(payQ, snap => {
         setCatenaPaymentsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       });
-      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); };
+      // Catena Cafe Food Bills
+      const foodBillsQ = query(collection(db, 'catenacafefoodbills'));
+      const unsubFoodBills = onSnapshot(foodBillsQ, snap => {
+        setCatenaFoodBillsList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+      return () => { unsubSales(); unsubExpenses(); unsubVendors(); unsubMaint(); unsubPay(); unsubFoodBills(); };
     }
     if (isOrientElite) {
       const unsubRooms = onSnapshot(collection(db, 'orientEliteRooms'), snap => {
@@ -675,8 +703,8 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               onPress={() => router.push('/hotel-orient-elite-maintenance-payments')}
             >
               <MaterialCommunityIcons name="wrench" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text>
-              <Text style={[summaryStyles.label, { color: '#888' }]}>Open Maintenance</Text>
+              {/* <Text style={[summaryStyles.value, { color: '#111' }]}>{openMaintCount}</Text> */}
+              <Text style={[summaryStyles.label, { color: '#888' }]}>Vendors Bill</Text>
             </TouchableOpacity>
             <View style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <TouchableOpacity onPress={() => router.push('/hotel-orient-elite-payments-paid')} style={{ alignItems: 'center' }}>
@@ -811,14 +839,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </TouchableOpacity>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/ojas-foodbill-report')}>
               <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={OJAS_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={getBranchStyles(branchId).label}>Food Bill</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{ojasTodayFoodBillAmount}</Text>
+              <Text style={getBranchStyles(branchId).label}>Today&apos;s Food Bill</Text>
             </TouchableOpacity>
-            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-maintenance-payments')}>
               <MaterialCommunityIcons name="wrench" size={32} color={OJAS_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasOpenMaintCount}</Text>
-              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Open Maintenance</Text>
-            </View>
+              {/* <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasOpenMaintCount}</Text> */}
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Vendors Bill</Text>
+            </TouchableOpacity>
             <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="check-circle" size={32} color={OJAS_PRIMARY} />
               <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasPaidPayments}</Text>
@@ -944,14 +972,14 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </TouchableOpacity>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff' }]} onPress={() => router.push('/catena-cafe-foodbill-report')}>
               <MaterialCommunityIcons name="silverware-fork-knife" size={32} color={CATENA_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Food Bill</Text>
-              <Text style={getBranchStyles(branchId).label}>Food Bill</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{catenaTodayFoodBillAmount}</Text>
+              <Text style={getBranchStyles(branchId).label}>Today&apos;s Food Bill</Text>
             </TouchableOpacity>
-            <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-maintenance-payments')}>
               <MaterialCommunityIcons name="wrench" size={32} color={CATENA_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaOpenMaintCount}</Text>
-              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Open Maintenance</Text>
-            </View>
+              {/* <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaOpenMaintCount}</Text> */}
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Vendors Bill</Text>
+            </TouchableOpacity>
             <View style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }] }>
               <MaterialCommunityIcons name="check-circle" size={32} color={CATENA_PRIMARY} />
               <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaPaidPayments}</Text>
@@ -966,6 +994,11 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
               <MaterialCommunityIcons name="alert-circle-outline" size={32} color={CATENA_PRIMARY} />
               <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaTodayPendingExpenseAmount}</Text>
               <Text style={[getBranchStyles(branchId).label, { color: '#e53935' }]}>Pending Expense</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-zomato-report')}>
+              <MaterialCommunityIcons name="food" size={32} color={CATENA_PRIMARY} />
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>Zomato</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Zomato Bills</Text>
             </TouchableOpacity>
           </View>
         </>

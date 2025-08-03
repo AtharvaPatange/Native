@@ -145,8 +145,8 @@ export default function HotelOrientEliteMaintenancePayments() {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <MaterialCommunityIcons name="wrench" size={28} color={DARK_GOLD} />
-        <Text style={styles.header}>Maintenance Payments</Text>
-        <Text style={styles.subHeader}>Manage vendor maintenance payments</Text>
+        <Text style={styles.header}>Vendors Bill</Text>
+        <Text style={styles.subHeader}>Manage vendor payments</Text>
       </View>
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>

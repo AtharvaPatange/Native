@@ -31,6 +31,7 @@ export default function HotelOrientEliteRooms() {
   const [paymentStatus, setPaymentStatus] = useState('pending');
   // Add advance state for guest form
   const [advance, setAdvance] = useState('');
+  const [editingAdvance, setEditingAdvance] = useState('');
 
   // Fetch all rooms
   useEffect(() => {
@@ -49,6 +50,8 @@ export default function HotelOrientEliteRooms() {
     setModalVisible(true);
     setShowAddGuest(false);
     setShowUpdate(false);
+    // Reset editing values
+    setEditingAdvance('');
   };
 
   const handleAddGuest = async () => {
@@ -83,6 +86,17 @@ export default function HotelOrientEliteRooms() {
     }, { merge: true });
     setShowUpdate(false);
     setModalVisible(false);
+  };
+
+  const openUpdateView = () => {
+    setShowUpdate(true);
+    setShowAddGuest(false);
+    // Initialize editing values with current guest data
+    if (selectedRoom && guest(selectedRoom)) {
+      setEditingAdvance(guest(selectedRoom).advance ? String(guest(selectedRoom).advance) : '');
+      setPaymentStatus(guest(selectedRoom).paymentStatus || 'pending');
+      setCheckout(guest(selectedRoom).checkout ? new Date(guest(selectedRoom).checkout) : null);
+    }
   };
 
   const roomStatus = (roomNo: string) => rooms[roomNo]?.status || 'inactive';
@@ -127,7 +141,7 @@ export default function HotelOrientEliteRooms() {
                   Add Guest in Room
                 </Button>
                 {guest(selectedRoom!) && (
-                  <Button mode="contained" style={styles.actionBtn} onPress={() => setShowUpdate(true)}>
+                  <Button mode="contained" style={styles.actionBtn} onPress={openUpdateView}>
                     Update Guest Status
                   </Button>
                 )}
@@ -239,16 +253,17 @@ export default function HotelOrientEliteRooms() {
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Advance Paid</Text>
                     <TextInput
-                      value={advance !== '' ? advance : (guest(selectedRoom).advance !== undefined ? String(guest(selectedRoom).advance) : '')}
-                      onChangeText={setAdvance}
+                      value={editingAdvance}
+                      onChangeText={setEditingAdvance}
                       style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
                       keyboardType="numeric"
+                      placeholder="0"
                     />
                   </View>
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Pending Amount</Text>
                     <Text style={styles.guestValue}>
-                      ₹{(guest(selectedRoom).amount || 0) - (advance !== '' ? Number(advance) : (guest(selectedRoom).advance || 0))}
+                      ₹{(guest(selectedRoom).amount || 0) - (Number(editingAdvance) || 0)}
                     </Text>
                   </View>
                   {/* Editable Payment Status */}
@@ -270,12 +285,22 @@ export default function HotelOrientEliteRooms() {
                       guest: {
                         ...guest(selectedRoom),
                         checkout: checkout ? checkout.toISOString().split('T')[0] : guest(selectedRoom).checkout,
-                        advance: advance !== '' ? Number(advance) : (guest(selectedRoom).advance || 0),
+                        advance: Number(editingAdvance) || 0,
                         paymentStatus,
                       },
                     }, { merge: true });
                     Alert.alert('Success', 'Guest details updated!');
+                    setShowUpdate(false);
                   }}>Save Changes</Button>
+                  
+                  <Button 
+                    mode="outlined" 
+                    style={[styles.actionBtn, { marginTop: 8, borderColor: '#d32f2f' }]} 
+                    onPress={handleSetInactive}
+                    textColor="#d32f2f"
+                  >
+                    Set Room Inactive
+                  </Button>
                 </View>
               </>
             )}

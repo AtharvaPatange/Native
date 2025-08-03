@@ -20,6 +20,7 @@ export default function OjasRiddhiSiddhiHall() {
   const [endDate, setEndDate] = useState(new Date());
   const [paymentType, setPaymentType] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
+  const [discountAmount, setDiscountAmount] = useState('0');
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showAllBookings, setShowAllBookings] = useState(false);
@@ -45,6 +46,7 @@ export default function OjasRiddhiSiddhiHall() {
     setEndDate(new Date());
     setPaymentType('cash');
     setAmountPaid('');
+    setDiscountAmount('0');
     setEditBooking(null);
     setModalVisible(true);
   };
@@ -56,6 +58,7 @@ export default function OjasRiddhiSiddhiHall() {
     setEndDate(booking.endDate ? (booking.endDate.toDate ? new Date(booking.endDate.toDate()) : new Date(booking.endDate)) : new Date());
     setPaymentType(booking.paymentType || 'cash');
     setAmountPaid(booking.amountPaid ? String(booking.amountPaid) : '');
+    setDiscountAmount(booking.discountAmount ? String(booking.discountAmount) : '0');
     setEditBooking(booking);
     setModalVisible(true);
   };
@@ -67,11 +70,13 @@ export default function OjasRiddhiSiddhiHall() {
     }
 
     const totalAmount = Number(peopleCount) * Number(amountPerPerson);
+    const discount = Number(discountAmount) || 0;
+    const finalAmount = totalAmount - discount;
     const paidAmount = Number(amountPaid);
-    const remainingAmount = totalAmount - paidAmount;
+    const remainingAmount = finalAmount - paidAmount;
 
-    if (paidAmount > totalAmount) {
-      Alert.alert('Error', 'Amount paid cannot be greater than total amount');
+    if (paidAmount > finalAmount) {
+      Alert.alert('Error', 'Amount paid cannot be greater than final amount after discount');
       return;
     }
 
@@ -79,6 +84,8 @@ export default function OjasRiddhiSiddhiHall() {
       peopleCount: Number(peopleCount),
       amountPerPerson: Number(amountPerPerson),
       totalAmount: totalAmount,
+      discountAmount: discount,
+      finalAmount: finalAmount,
       startDate: startDate,
       endDate: endDate,
       paymentType: paymentType,
@@ -121,6 +128,8 @@ export default function OjasRiddhiSiddhiHall() {
   };
 
   const totalAmountAll = bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const totalDiscountAll = bookings.reduce((sum, b) => sum + (b.discountAmount || 0), 0);
+  const totalFinalAmountAll = bookings.reduce((sum, b) => sum + (b.finalAmount || b.totalAmount || 0), 0);
   const totalPaidAll = bookings.reduce((sum, b) => sum + (b.amountPaid || 0), 0);
   const totalRemainingAll = bookings.reduce((sum, b) => sum + (b.amountRemaining || 0), 0);
 
@@ -140,6 +149,8 @@ export default function OjasRiddhiSiddhiHall() {
           <th>No. of People</th>
           <th>Amount/Person</th>
           <th>Total</th>
+          <th>Discount</th>
+          <th>Final Amount</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Payment Type</th>
@@ -152,6 +163,8 @@ export default function OjasRiddhiSiddhiHall() {
             <td>${b.peopleCount}</td>
             <td>₹${b.amountPerPerson}</td>
             <td>₹${b.totalAmount}</td>
+            <td>₹${b.discountAmount || 0}</td>
+            <td>₹${b.finalAmount || b.totalAmount}</td>
             <td>${b.startDate ? (b.startDate.toDate ? new Date(b.startDate.toDate()).toLocaleDateString() : new Date(b.startDate).toLocaleDateString()) : 'N/A'}</td>
             <td>${b.endDate ? (b.endDate.toDate ? new Date(b.endDate.toDate()).toLocaleDateString() : new Date(b.endDate).toLocaleDateString()) : 'N/A'}</td>
             <td>${b.paymentType}</td>
@@ -163,6 +176,8 @@ export default function OjasRiddhiSiddhiHall() {
       </table>
       <h3>Summary:</h3>
       <p>Total Amount: ₹${totalAmountAll}</p>
+      <p>Total Discount: ₹${totalDiscountAll}</p>
+      <p>Final Amount: ₹${totalFinalAmountAll}</p>
       <p>Total Paid: ₹${totalPaidAll}</p>
       <p>Total Remaining: ₹${totalRemainingAll}</p>
       <p>Active Halls: ${activeBookings.length}</p>
@@ -196,6 +211,8 @@ export default function OjasRiddhiSiddhiHall() {
       
       <View style={styles.summaryContainer}>
         <Text style={styles.summaryText}>Total Amount: ₹{totalAmountAll}</Text>
+        {/* <Text style={styles.summaryText}>Total Discount: ₹{totalDiscountAll}</Text>
+        <Text style={styles.summaryText}>Final Amount: ₹{totalFinalAmountAll}</Text> */}
         <Text style={styles.summaryText}>Total Paid: ₹{totalPaidAll}</Text>
         <Text style={styles.summaryText}>Total Remaining: ₹{totalRemainingAll}</Text>
         <View style={styles.statusContainer}>
@@ -224,6 +241,10 @@ export default function OjasRiddhiSiddhiHall() {
             <Text>No. of People: {booking.peopleCount}</Text>
             <Text>Amount/Person: ₹{booking.amountPerPerson}</Text>
             <Text>Total: ₹{booking.totalAmount}</Text>
+            {booking.discountAmount > 0 && (
+              <Text style={styles.discountText}>Discount: ₹{booking.discountAmount}</Text>
+            )}
+            <Text style={styles.finalAmountText}>Final Amount: ₹{booking.finalAmount || booking.totalAmount}</Text>
             <Text>Start Date: {booking.startDate ? (booking.startDate.toDate ? new Date(booking.startDate.toDate()).toLocaleDateString() : new Date(booking.startDate).toLocaleDateString()) : 'N/A'}</Text>
             {(() => {
               const endDateObj = booking.endDate ? (booking.endDate.toDate ? new Date(booking.endDate.toDate()) : new Date(booking.endDate)) : null;
@@ -271,20 +292,39 @@ export default function OjasRiddhiSiddhiHall() {
                 label="No. of People" 
                 value={peopleCount} 
                 onChangeText={setPeopleCount} 
-                style={styles.input} 
+                style={styles.inputNew} 
                 keyboardType="numeric" 
+                placeholderTextColor="#888"
               />
               
               <TextInput 
                 label="Amount per Person (₹)" 
                 value={amountPerPerson} 
                 onChangeText={setAmountPerPerson} 
-                style={styles.input} 
+                style={styles.inputNew} 
                 keyboardType="numeric" 
+                placeholderTextColor="#888"
               />
 
               <Text style={styles.totalText}>
                 Total: ₹{peopleCount && amountPerPerson ? Number(peopleCount) * Number(amountPerPerson) : 0}
+              </Text>
+
+              <TextInput 
+                label="Discount Amount (₹)" 
+                value={discountAmount} 
+                onChangeText={setDiscountAmount} 
+                style={styles.inputNew} 
+                keyboardType="numeric" 
+                placeholderTextColor="#888"
+              />
+
+              <Text style={styles.finalAmountText}>
+                Final Amount: ₹{
+                  peopleCount && amountPerPerson 
+                    ? Math.max(0, (Number(peopleCount) * Number(amountPerPerson)) - (Number(discountAmount) || 0))
+                    : 0
+                }
               </Text>
 
               <View style={styles.dateContainer}>
@@ -321,14 +361,15 @@ export default function OjasRiddhiSiddhiHall() {
                 label="Amount Paid (₹)" 
                 value={amountPaid} 
                 onChangeText={setAmountPaid} 
-                style={styles.input} 
+                style={styles.inputNew} 
                 keyboardType="numeric" 
+                placeholderTextColor="#888"
               />
 
               <Text style={styles.remainingText}>
                 Amount Remaining: ₹{
                   peopleCount && amountPerPerson && amountPaid 
-                    ? Math.max(0, (Number(peopleCount) * Number(amountPerPerson)) - Number(amountPaid))
+                    ? Math.max(0, ((Number(peopleCount) * Number(amountPerPerson)) - (Number(discountAmount) || 0)) - Number(amountPaid))
                     : 0
                 }
               </Text>
@@ -504,17 +545,26 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    width: 320,
+    borderRadius: 18,
+    padding: 28,
+    margin: 16,
     alignItems: 'center',
-    maxHeight: '90%',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 12,
+    minWidth: 320,
+    maxWidth: 420,
+    alignSelf: 'center',
+    position: 'relative',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 18,
-    color: '#111',
+    textAlign: 'center',
+    color: '#222',
+    letterSpacing: 0.5,
   },
   input: {
     width: 240,
@@ -524,11 +574,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     color: '#111',
   },
+  inputNew: {
+    borderWidth: 1,
+    borderColor: PRIMARY_BROWN,
+    width: 260,
+    height: 56,
+    marginBottom: 12,
+    paddingVertical: 0,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    color: '#222',
+    fontSize: 15,
+    shadowColor: PRIMARY_BROWN,
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
   totalText: {
     marginVertical: 8,
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#111',
+    color: '#222',
+    textAlign: 'center',
   },
   dateContainer: {
     flexDirection: 'row',
@@ -564,8 +633,14 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginTop: 10,
-    borderRadius: 8,
+    marginBottom: 14,
     backgroundColor: PRIMARY_BROWN,
+    borderRadius: 8,
+    paddingVertical: 10,
+    minWidth: 180,
+    width: 180,
+    alignSelf: 'center',
+    elevation: 0,
   },
   setInactiveBtn: {
     marginTop: 8,
@@ -579,5 +654,15 @@ const styles = StyleSheet.create({
   },
   pastEndDate: {
     color: '#d32f2f',
+  },
+  discountText: {
+    color: '#ff9800',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  finalAmountText: {
+    color: '#111',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 }); 

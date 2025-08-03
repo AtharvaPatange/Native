@@ -1,16 +1,16 @@
 import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import { collection, getDocs, query, Timestamp, where } from 'firebase/firestore';
+import { Picker } from '@react-native-picker/picker';
+import { useRouter } from 'expo-router';
+import { addDoc, collection, doc, getDocs, query, Timestamp, updateDoc, where } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Button, Card, Dialog, Portal } from 'react-native-paper';
+import { Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Button, Card, Dialog, Portal, RadioButton } from 'react-native-paper';
 
-const PRIMARY_COLOR = '#e0a86b';
-const SECONDARY_COLOR = '#e2af7a';
-const DARK_GOLD = '#d4a574';
+const PRIMARY_COLOR = '#7FB069';
+const SECONDARY_COLOR = '#D4E6C3';
+const DARK_GREEN = '#1a3d1a';
 
 function formatDate(date: any) {
   if (!date) return '';
@@ -21,48 +21,67 @@ function formatDate(date: any) {
 
 function getStatusIcon(status: string) {
   switch (status?.toLowerCase()) {
-    case 'done': return 'check-circle';
-    case 'pending': return 'clock-outline';
-    default: return 'help-circle-outline';
+    case 'done':
+    case 'paid':
+      return 'check-circle';
+    case 'pending':
+      return 'clock-outline';
+    default:
+      return 'help-circle-outline';
   }
 }
 
 function getStatusColor(status: string) {
   switch (status?.toLowerCase()) {
-    case 'done': return '#4caf50';
-    case 'pending': return '#ff9800';
-    default: return '#9e9e9e';
+    case 'done':
+    case 'paid':
+      return '#4caf50';
+    case 'pending':
+      return '#ff9800';
+    default:
+      return '#9e9e9e';
   }
 }
 
 function getPaymentModeIcon(mode: string) {
   switch (mode?.toLowerCase()) {
-    case 'cash': return 'cash';
-    case 'online': return 'credit-card';
-    case 'bank': return 'bank';
-    case 'card': return 'credit-card-outline';
-    default: return 'cash-multiple';
+    case 'cash':
+      return 'cash';
+    case 'online':
+      return 'credit-card';
+    case 'bank':
+      return 'bank';
+    case 'card':
+      return 'credit-card-outline';
+    default:
+      return 'cash-multiple';
   }
 }
 
-export default function HotelOrientEliteAllVendorPayments() {
+export default function CatenaCafeMaintenancePayments() {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<any | null>(null);
+  const [status, setStatus] = useState('pending');
   const [modalVisible, setModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState<Date>(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [filterStatus, setFilterStatus] = useState<'pending' | 'done'>('pending');
+  const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchAllPayments();
-  }, [startDate, endDate]);
+    fetchPayments();
+  }, [filterStatus, startDate, endDate]);
 
-  async function fetchAllPayments() {
+  async function fetchPayments() {
     setLoading(true);
     try {
-      const q = query(collection(db, 'vendorPayments'), where('branchId', '==', 'orientElite'));
+      const q = query(
+        collection(db, 'catenacafevendorpayments'),
+        where('status', '==', filterStatus)
+      );
       const snap = await getDocs(q);
       
       // Create date range for filtering
@@ -124,64 +143,69 @@ export default function HotelOrientEliteAllVendorPayments() {
     setLoading(false);
   }
 
-  async function handleDownloadReport() {
-    const html = `
-      <h2>Hotel Orient Elite All Vendor Payments Report</h2>
-      <p>From: ${formatDate(startDate)} To: ${formatDate(endDate)}</p>
-      <table border="1" cellspacing="0" cellpadding="4" style="width:100%; border-collapse:collapse; font-size:12px;">
-        <thead>
-          <tr>
-            <th>Vendor Name</th>
-            <th>Amount</th>
-            <th>Payment Mode</th>
-            <th>Status</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Created Date</th>
-            <th>Created By</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${payments.map(p => `
-            <tr>
-              <td>${p.vendor || '-'}</td>
-              <td>₹${p.amount?.toLocaleString() || 0}</td>
-              <td>${p.paymentMode || '-'}</td>
-              <td>${p.status || '-'}</td>
-              <td>${formatDate(p.startDate)}</td>
-              <td>${formatDate(p.endDate)}</td>
-              <td>${formatDate(p.createdAt)}</td>
-              <td>${p.createdBy || '-'}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-      <p><strong>Total Payments:</strong> ${payments.length}</p>
-      <p><strong>Total Amount:</strong> ₹${payments.reduce((sum, p) => sum + (p.amount || 0), 0).toLocaleString()}</p>
-    `;
-    const { uri } = await Print.printToFileAsync({ html });
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share PDF', UTI: 'com.adobe.pdf' });
+  async function handleSave() {
+    if (!selected) return;
+    setLoading(true);
+    try {
+      await updateDoc(doc(db, 'catenacafevendorpayments', selected.id), { status });
+      
+      // If status is changed to 'done', add to expenses
+      if (status === 'done' && selected.status !== 'done') {
+        await addDoc(collection(db, 'catenacafeexpense'), {
+          cash: selected.amount,
+          online: 0,
+          pending: 0,
+          type: selected.paymentMode || 'cash',
+          status: 'done',
+          description: `Vendor Payment - ${selected.vendor}`,
+          vendorName: selected.vendor,
+          vendorStartDate: selected.startDate,
+          vendorEndDate: selected.endDate,
+          vendorPaymentMode: selected.paymentMode || 'cash',
+          vendorAmount: selected.amount,
+          isVendorPayment: true,
+          createdAt: new Date(),
+          createdBy: selected.createdBy || 'system',
+        });
+      }
+      
+      setModalVisible(false);
+      fetchPayments();
+      Alert.alert('Success', 'Payment status updated!');
+    } catch (e) {
+      console.error('Error updating payment:', e);
+      Alert.alert('Error', 'Failed to update payment status.');
     }
+    setLoading(false);
   }
 
   const totalAmount = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
-  const pendingCount = payments.filter(p => p.status === 'pending').length;
-  const doneCount = payments.filter(p => p.status === 'done').length;
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <MaterialCommunityIcons name="account-group" size={28} color={DARK_GOLD} />
-        <Text style={styles.header}>All Vendor Payments</Text>
-        <Text style={styles.subHeader}>Complete vendor payment history</Text>
+        <MaterialCommunityIcons name="wrench" size={28} color={DARK_GREEN} />
+        <Text style={styles.header}>Vendors Bill</Text>
+        <Text style={styles.subHeader}>Manage vendor payments</Text>
       </View>
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Date Filter Card */}
+        {/* Filter Card */}
         <Card style={styles.filterCard}>
           <Card.Content>
-            <Text style={styles.filterTitle}>Date Range Filter</Text>
+            <Text style={styles.filterTitle}>Filter & Date Range</Text>
+            <View style={styles.filterRow}>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={filterStatus}
+                  onValueChange={setFilterStatus}
+                  style={styles.picker}
+                >
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
+              </View>
+            </View>
             <View style={styles.dateRow}>
               <TouchableOpacity 
                 style={styles.dateButton} 
@@ -202,13 +226,6 @@ export default function HotelOrientEliteAllVendorPayments() {
                 </Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-              style={styles.refreshButton}
-              onPress={fetchAllPayments}
-            >
-              <MaterialCommunityIcons name="refresh" size={20} color="#fff" />
-              <Text style={styles.refreshButtonText}>Refresh Data</Text>
-            </TouchableOpacity>
           </Card.Content>
         </Card>
 
@@ -225,16 +242,20 @@ export default function HotelOrientEliteAllVendorPayments() {
                 <Text style={styles.summaryValue}>₹{totalAmount.toLocaleString()}</Text>
               </View>
             </View>
-            <View style={styles.summaryRow}>
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Pending</Text>
-                <Text style={styles.summaryValue}>{pendingCount}</Text>
-              </View>
-              <View style={styles.summaryItem}>
-                <Text style={styles.summaryLabel}>Completed</Text>
-                <Text style={styles.summaryValue}>{doneCount}</Text>
-              </View>
-            </View>
+          </Card.Content>
+        </Card>
+
+        {/* Check All Vendor Payments Button */}
+        <Card style={styles.actionCard}>
+          <Card.Content>
+            <TouchableOpacity 
+              style={styles.checkAllButton}
+              onPress={() => router.push('/catena-cafe-all-vendor-payments')}
+            >
+              <MaterialCommunityIcons name="account-group" size={24} color="#fff" />
+              <Text style={styles.checkAllButtonText}>Check All Vendor Payments</Text>
+              <MaterialCommunityIcons name="chevron-right" size={24} color="#fff" />
+            </TouchableOpacity>
           </Card.Content>
         </Card>
 
@@ -250,7 +271,7 @@ export default function HotelOrientEliteAllVendorPayments() {
             <Card.Content>
               <MaterialCommunityIcons name="file-document-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>No payments found</Text>
-              <Text style={styles.emptySubText}>Try adjusting your date range</Text>
+              <Text style={styles.emptySubText}>Try adjusting your filters or date range</Text>
             </Card.Content>
           </Card>
         ) : (
@@ -308,6 +329,7 @@ export default function HotelOrientEliteAllVendorPayments() {
                   style={styles.viewDetailsButton}
                   onPress={() => {
                     setSelected(payment);
+                    setStatus(payment.status);
                     setModalVisible(true);
                   }}
                 >
@@ -318,19 +340,6 @@ export default function HotelOrientEliteAllVendorPayments() {
             </Card>
           ))
         )}
-
-        {/* Download Report Button */}
-        <Card style={styles.downloadCard}>
-          <Card.Content>
-            <TouchableOpacity 
-              style={styles.downloadButton}
-              onPress={handleDownloadReport}
-            >
-              <MaterialCommunityIcons name="download" size={24} color="#fff" />
-              <Text style={styles.downloadButtonText}>Download Report</Text>
-            </TouchableOpacity>
-          </Card.Content>
-        </Card>
       </ScrollView>
 
       {/* Details Modal */}
@@ -353,12 +362,6 @@ export default function HotelOrientEliteAllVendorPayments() {
                   <Text style={styles.modalValue}>{selected.paymentMode || 'Cash'}</Text>
                 </View>
                 <View style={styles.modalRow}>
-                  <Text style={styles.modalLabel}>Status:</Text>
-                  <Text style={[styles.modalValue, { color: getStatusColor(selected.status) }]}>
-                    {selected.status?.toUpperCase()}
-                  </Text>
-                </View>
-                <View style={styles.modalRow}>
                   <Text style={styles.modalLabel}>Created Date:</Text>
                   <Text style={styles.modalValue}>{formatDate(selected.createdAt)}</Text>
                 </View>
@@ -378,11 +381,26 @@ export default function HotelOrientEliteAllVendorPayments() {
                   <Text style={styles.modalLabel}>Created By:</Text>
                   <Text style={styles.modalValue}>{selected.createdBy || 'Unknown'}</Text>
                 </View>
+                
+                <View style={styles.statusUpdateSection}>
+                  <Text style={styles.statusUpdateLabel}>Update Status:</Text>
+                  <RadioButton.Group onValueChange={value => setStatus(value)} value={status}>
+                    <View style={styles.radioRow}>
+                      <RadioButton value="pending" />
+                      <Text style={styles.radioLabel}>Pending</Text>
+                    </View>
+                    <View style={styles.radioRow}>
+                      <RadioButton value="done" />
+                      <Text style={styles.radioLabel}>Done</Text>
+                    </View>
+                  </RadioButton.Group>
+                </View>
               </View>
             )}
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setModalVisible(false)}>Close</Button>
+            <Button onPress={() => setModalVisible(false)}>Cancel</Button>
+            <Button onPress={handleSave} loading={loading}>Update</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
@@ -460,6 +478,18 @@ const styles = StyleSheet.create({
     color: '#222',
     marginBottom: 12,
   },
+  filterRow: {
+    marginBottom: 12,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  picker: {
+    height: 50,
+  },
   dateRow: {
     flexDirection: 'column',
     gap: 12,
@@ -480,21 +510,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#222',
   },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: PRIMARY_COLOR,
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 12,
-  },
-  refreshButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 8,
-  },
   summaryCard: {
     marginBottom: 16,
     backgroundColor: PRIMARY_COLOR,
@@ -504,14 +519,13 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 8,
   },
   summaryItem: {
     alignItems: 'center',
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#6b4c1b',
+    color: '#1a3d1a',
     marginBottom: 4,
   },
   summaryValue: {
@@ -628,26 +642,6 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 4,
   },
-  downloadCard: {
-    marginBottom: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    elevation: 2,
-  },
-  downloadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: PRIMARY_COLOR,
-    padding: 16,
-    borderRadius: 8,
-  },
-  downloadButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginLeft: 8,
-  },
   modal: {
     borderRadius: 12,
   },
@@ -673,5 +667,48 @@ const styles = StyleSheet.create({
     color: '#222',
     flex: 1,
     textAlign: 'right',
+  },
+  statusUpdateSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  statusUpdateLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 8,
+  },
+  radioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  radioLabel: {
+    fontSize: 14,
+    color: '#222',
+    marginLeft: 8,
+  },
+  actionCard: {
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+  },
+  checkAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: PRIMARY_COLOR,
+    padding: 16,
+    borderRadius: 8,
+  },
+  checkAllButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    flex: 1,
+    textAlign: 'center',
   },
 }); 

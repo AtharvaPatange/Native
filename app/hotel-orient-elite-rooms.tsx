@@ -32,6 +32,8 @@ export default function HotelOrientEliteRooms() {
   // Add advance state for guest form
   const [advance, setAdvance] = useState('');
   const [editingAdvance, setEditingAdvance] = useState('');
+  const [editingTotalAmount, setEditingTotalAmount] = useState('');
+  const [addAmount, setAddAmount] = useState('');
 
   // Fetch all rooms
   useEffect(() => {
@@ -83,6 +85,7 @@ export default function HotelOrientEliteRooms() {
   const handleSetInactive = async () => {
     await setDoc(doc(db, 'orientEliteRooms', selectedRoom!), {
       status: 'inactive',
+      guest: null, // Remove guest data
     }, { merge: true });
     setShowUpdate(false);
     setModalVisible(false);
@@ -94,8 +97,10 @@ export default function HotelOrientEliteRooms() {
     // Initialize editing values with current guest data
     if (selectedRoom && guest(selectedRoom)) {
       setEditingAdvance(guest(selectedRoom).advance ? String(guest(selectedRoom).advance) : '');
+      setEditingTotalAmount(guest(selectedRoom).amount ? String(guest(selectedRoom).amount) : '');
       setPaymentStatus(guest(selectedRoom).paymentStatus || 'pending');
       setCheckout(guest(selectedRoom).checkout ? new Date(guest(selectedRoom).checkout) : null);
+      setAddAmount(''); // Reset add amount field
     }
   };
 
@@ -248,22 +253,65 @@ export default function HotelOrientEliteRooms() {
                   </View>
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Total Amount</Text>
-                    <Text style={styles.guestValue}>₹{guest(selectedRoom).amount || 0}</Text>
+                    <TextInput
+                      value={editingTotalAmount}
+                      onChangeText={setEditingTotalAmount}
+                      style={styles.editableAmountInput}
+                      keyboardType="numeric"
+                      placeholder="0"
+                    />
                   </View>
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Advance Paid</Text>
                     <TextInput
                       value={editingAdvance}
                       onChangeText={setEditingAdvance}
-                      style={[styles.input, { width: 100, marginBottom: 0, backgroundColor: '#f9f9f9' }]}
+                      style={styles.editableAmountInput}
                       keyboardType="numeric"
                       placeholder="0"
                     />
                   </View>
+                                       <View style={styles.addAmountRow}>
+                      <TextInput
+                        value={addAmount}
+                        onChangeText={setAddAmount}
+                        style={styles.addAmountInput}
+                        keyboardType="numeric"
+                        placeholder="Add amount"
+                        placeholderTextColor="#888"
+                      />
+                      <Button 
+                        mode="contained" 
+                        onPress={() => {
+                          const currentAdvance = Number(editingAdvance) || 0;
+                          const addValue = Number(addAmount) || 0;
+                          const totalAmount = Number(editingTotalAmount) || 0;
+                          const remainingAmount = totalAmount - currentAdvance;
+                          
+                          if (addValue <= 0) {
+                            Alert.alert('Error', 'Please enter a valid amount');
+                            return;
+                          }
+                          
+                          if (addValue > remainingAmount) {
+                            Alert.alert('Error', `Cannot add more than remaining amount (₹${remainingAmount})`);
+                            return;
+                          }
+                          
+                          const newAdvance = currentAdvance + addValue;
+                          setEditingAdvance(String(newAdvance));
+                          setAddAmount('');
+                          Alert.alert('Success', `Added ₹${addValue} to advance payment`);
+                        }}
+                        style={styles.addAmountButton}
+                      >
+                        Add
+                      </Button>
+                    </View>
                   <View style={styles.guestRow}>
                     <Text style={styles.guestLabel}>Pending Amount</Text>
                     <Text style={styles.guestValue}>
-                      ₹{(guest(selectedRoom).amount || 0) - (Number(editingAdvance) || 0)}
+                      ₹{(Number(editingTotalAmount) || 0) - (Number(editingAdvance) || 0)}
                     </Text>
                   </View>
                   {/* Editable Payment Status */}
@@ -280,11 +328,12 @@ export default function HotelOrientEliteRooms() {
                     </RadioButton.Group>
                   </View>
                   <Button mode="contained" style={styles.actionBtn} onPress={async () => {
-                    // Save changes to checkout, advance, and payment status
+                    // Save changes to checkout, advance, total amount, and payment status
                     await setDoc(doc(db, 'orientEliteRooms', selectedRoom), {
                       guest: {
                         ...guest(selectedRoom),
                         checkout: checkout ? checkout.toISOString().split('T')[0] : guest(selectedRoom).checkout,
+                        amount: Number(editingTotalAmount) || 0,
                         advance: Number(editingAdvance) || 0,
                         paymentStatus,
                       },
@@ -483,8 +532,57 @@ const styles = StyleSheet.create({
     backgroundColor: '#43a047',
     color: '#fff',
   },
-  statusPending: {
-    backgroundColor: '#e53935',
-    color: '#fff',
-  },
+     statusPending: {
+     backgroundColor: '#e53935',
+     color: '#fff',
+   },
+   addAmountRow: {
+     flexDirection: 'row',
+     alignItems: 'center',
+     marginBottom: 12,
+     gap: 12,
+   },
+   addAmountInput: {
+     flex: 1,
+     borderWidth: 1,
+     borderColor: PRIMARY_COLOR,
+     width: 180,
+     height: 56,
+     paddingVertical: 0,
+     paddingHorizontal: 12,
+     borderRadius: 8,
+     backgroundColor: '#fff',
+     color: '#222',
+     fontSize: 15,
+     shadowColor: PRIMARY_COLOR,
+     shadowOpacity: 0.04,
+     shadowRadius: 2,
+     justifyContent: 'center',
+     alignSelf: 'center',
+   },
+   addAmountButton: {
+     backgroundColor: PRIMARY_COLOR,
+     borderRadius: 8,
+     paddingVertical: 10,
+     minWidth: 80,
+     height: 56,
+     justifyContent: 'center',
+     elevation: 0,
+   },
+   editableAmountInput: {
+     borderWidth: 1,
+     borderColor: PRIMARY_COLOR,
+     width: 120,
+     height: 40,
+     paddingVertical: 0,
+     paddingHorizontal: 12,
+     borderRadius: 6,
+     backgroundColor: '#fff',
+     color: '#222',
+     fontSize: 14,
+     shadowColor: PRIMARY_COLOR,
+     shadowOpacity: 0.04,
+     shadowRadius: 2,
+     textAlign: 'center',
+   },
 }); 

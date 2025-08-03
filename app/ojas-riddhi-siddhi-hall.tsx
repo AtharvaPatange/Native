@@ -21,6 +21,7 @@ export default function OjasRiddhiSiddhiHall() {
   const [paymentType, setPaymentType] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
   const [discountAmount, setDiscountAmount] = useState('0');
+  const [addAmount, setAddAmount] = useState('');
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [showAllBookings, setShowAllBookings] = useState(false);
@@ -47,6 +48,7 @@ export default function OjasRiddhiSiddhiHall() {
     setPaymentType('cash');
     setAmountPaid('');
     setDiscountAmount('0');
+    setAddAmount('');
     setEditBooking(null);
     setModalVisible(true);
   };
@@ -59,6 +61,7 @@ export default function OjasRiddhiSiddhiHall() {
     setPaymentType(booking.paymentType || 'cash');
     setAmountPaid(booking.amountPaid ? String(booking.amountPaid) : '');
     setDiscountAmount(booking.discountAmount ? String(booking.discountAmount) : '0');
+    setAddAmount('');
     setEditBooking(booking);
     setModalVisible(true);
   };
@@ -366,6 +369,46 @@ export default function OjasRiddhiSiddhiHall() {
                 placeholderTextColor="#888"
               />
 
+              <View style={styles.addAmountRow}>
+                <TextInput
+                  value={addAmount}
+                  onChangeText={setAddAmount}
+                  style={styles.addAmountInput}
+                  keyboardType="numeric"
+                  placeholder="Add amount"
+                  placeholderTextColor="#888"
+                />
+                <Button 
+                  mode="contained" 
+                  onPress={() => {
+                    const currentPaid = Number(amountPaid) || 0;
+                    const addValue = Number(addAmount) || 0;
+                    const totalAmount = Number(peopleCount) * Number(amountPerPerson);
+                    const discount = Number(discountAmount) || 0;
+                    const finalAmount = totalAmount - discount;
+                    const remainingAmount = finalAmount - currentPaid;
+                    
+                    if (addValue <= 0) {
+                      Alert.alert('Error', 'Please enter a valid amount');
+                      return;
+                    }
+                    
+                    if (addValue > remainingAmount) {
+                      Alert.alert('Error', `Cannot add more than remaining amount (₹${remainingAmount})`);
+                      return;
+                    }
+                    
+                    const newPaid = currentPaid + addValue;
+                    setAmountPaid(String(newPaid));
+                    setAddAmount('');
+                    Alert.alert('Success', `Added ₹${addValue} to amount paid`);
+                  }}
+                  style={styles.addAmountButton}
+                >
+                  Add
+                </Button>
+              </View>
+
               <Text style={styles.remainingText}>
                 Amount Remaining: ₹{
                   peopleCount && amountPerPerson && amountPaid 
@@ -664,5 +707,38 @@ const styles = StyleSheet.create({
     color: '#111',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  addAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  addAmountInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: PRIMARY_BROWN,
+    width: 180,
+    height: 56,
+    paddingVertical: 0,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    color: '#222',
+    fontSize: 15,
+    shadowColor: PRIMARY_BROWN,
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    justifyContent: 'center',
+    alignSelf: 'center',
+  },
+  addAmountButton: {
+    backgroundColor: PRIMARY_BROWN,
+    borderRadius: 8,
+    paddingVertical: 10,
+    minWidth: 80,
+    height: 56,
+    justifyContent: 'center',
+    elevation: 0,
   },
 }); 

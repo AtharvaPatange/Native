@@ -167,6 +167,8 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   let ojasTodaySales = 0, ojasTodayExpenses = 0, ojasVendorCount = 0, ojasOpenMaintCount = 0, ojasPaidPayments = 0, ojasPendingPayments = 0;
   let ojasTodayPendingExpenseAmount = 0;
   let ojasTodayFoodBillAmount = 0;
+  let ojasTodayPendingSalesCount = 0;
+  let ojasTodayPendingExpenseCount = 0;
   if (isOjas) {
     const now = new Date();
     ojasTodaySales = ojasSalesList.filter(s => {
@@ -202,6 +204,20 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       );
     });
     ojasTodayPendingExpenseAmount = ojasTodayPendingExpenses.reduce((sum, e) => sum + (e.cash || 0), 0);
+    ojasTodayPendingExpenseCount = ojasTodayPendingExpenses.length;
+    
+    // Calculate today's pending sales for Ojas
+    const ojasTodayPendingSales = ojasSalesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+      return (
+        s.status === 'pending' &&
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    });
+    ojasTodayPendingSalesCount = ojasTodayPendingSales.length;
     
     // Calculate today's food bill amount for Ojas
     ojasTodayFoodBillAmount = ojasFoodBillsList.filter(fb => {
@@ -298,6 +314,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   let todayPendingSalesCount = 0;
   let todayPendingSalesAmount = 0;
   let todayPendingExpenseAmount = 0;
+  let todayPendingExpenseCount = 0;
   if (isOrientElite) {
     const now = new Date();
     todaySales = salesList.filter(s => {
@@ -345,6 +362,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       );
     });
     todayPendingExpenseAmount = todayPendingExpenses.reduce((sum, e) => sum + (e.cash || 0), 0);
+    todayPendingExpenseCount = todayPendingExpenses.length;
   }
 
   // Calculate totals and averages for tooltip
@@ -365,6 +383,9 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
   let catenaTodaySales = 0, catenaTodayExpenses = 0, catenaVendorCount = 0, catenaOpenMaintCount = 0, catenaPaidPayments = 0, catenaPendingPayments = 0;
   let catenaTodayPendingExpenseAmount = 0;
   let catenaTodayFoodBillAmount = 0;
+  let catenaTodayPendingSalesCount = 0;
+  let catenaTodayPendingSalesAmount = 0;
+  let catenaTodayPendingExpenseCount = 0;
   if (isCatenaCafe) {
     const now = new Date();
     catenaTodaySales = catenaSalesList.filter(s => {
@@ -400,6 +421,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       );
     });
     catenaTodayPendingExpenseAmount = catenaTodayPendingExpenses.reduce((sum, e) => sum + (e.cash || 0), 0);
+    catenaTodayPendingExpenseCount = catenaTodayPendingExpenses.length;
     
     // Calculate today's food bill amount for Catena Cafe
     catenaTodayFoodBillAmount = catenaFoodBillsList.filter(fb => {
@@ -407,6 +429,20 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
       const d = new Date(fb.createdAt.seconds ? fb.createdAt.seconds * 1000 : fb.createdAt);
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
     }).reduce((sum, fb) => sum + (fb.amount || 0), 0);
+    
+    // Calculate today's pending sales for Catena Cafe
+    const catenaTodayPendingSales = catenaSalesList.filter(s => {
+      if (!s.createdAt) return false;
+      const d = new Date(s.createdAt.seconds ? s.createdAt.seconds * 1000 : s.createdAt);
+      return (
+        s.status === 'pending' &&
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    });
+    catenaTodayPendingSalesCount = catenaTodayPendingSales.length;
+    catenaTodayPendingSalesAmount = catenaTodayPendingSales.reduce((sum, s) => sum + (s.cash || 0), 0);
   }
   // Catena Cafe chart data
   let catenaChartLabels: string[] = [];
@@ -715,13 +751,13 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
             <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/hotel-orient-elite-payments-pending')}>
               <MaterialCommunityIcons name="clock-outline" size={32} color={SECONDARY_COLOR} />
-              <Text style={[summaryStyles.value, { color: '#111' }]}>{todayPendingSalesAmount}</Text>
+              <Text style={[summaryStyles.value, { color: '#111' }]}>{todayPendingSalesCount}</Text>
               <Text style={[summaryStyles.label, { color: '#888' }]}>Pending Sales</Text>
             </TouchableOpacity>
                        {/* Pending Expense Card */}
            <TouchableOpacity style={[summaryStyles.card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/hotel-orient-elite-expenses-pending')}>
              <MaterialCommunityIcons name="alert-circle-outline" size={32} color={SECONDARY_COLOR} />
-             <Text style={[summaryStyles.value, { color: '#111' }]}>{todayPendingExpenseAmount}</Text>
+             <Text style={[summaryStyles.value, { color: '#111' }]}>{todayPendingExpenseCount}</Text>
              <Text style={[summaryStyles.label, { color: '#e53935' }]}>Pending Expense</Text>
            </TouchableOpacity>
           </View>
@@ -812,7 +848,7 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
           <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000', marginBottom: 10, marginLeft: 2, marginTop: 8 }}>Today&apos;s Summary</Text>
           {/* Summary Cards Grid */}
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 18, columnGap: 12, marginBottom: 24 }}>
-            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expense-report')}>
+            <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-sales-report')}>
               <MaterialCommunityIcons name="cash" size={32} color={OJAS_PRIMARY} />
               <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>₹{ojasTodaySales}</Text>
               <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Today&apos;s Sales</Text>
@@ -854,12 +890,12 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-payments-pending')}>
               <MaterialCommunityIcons name="clock-outline" size={32} color={OJAS_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasPendingPayments}</Text>
-              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Sales</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasTodayPendingSalesCount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Pending Sales</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/ojas-expenses-pending')}>
               <MaterialCommunityIcons name="alert-circle-outline" size={32} color={OJAS_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasTodayPendingExpenseAmount}</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{ojasTodayPendingExpenseCount}</Text>
               <Text style={[getBranchStyles(branchId).label, { color: '#e53935' }]}>Pending Expense</Text>
             </TouchableOpacity>
           </View>
@@ -987,12 +1023,12 @@ export default function HotelDashboard({ branchId, branchName }: HotelDashboardP
             </View>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-payments-pending')}>
               <MaterialCommunityIcons name="clock-outline" size={32} color={CATENA_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaPendingPayments}</Text>
-              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Payments Sales</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaTodayPendingSalesCount}</Text>
+              <Text style={[getBranchStyles(branchId).label, { color: '#888' }]}>Pending Sales</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-expenses-pending')}>
               <MaterialCommunityIcons name="alert-circle-outline" size={32} color={CATENA_PRIMARY} />
-              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaTodayPendingExpenseAmount}</Text>
+              <Text style={[getBranchStyles(branchId).value, { color: '#111' }]}>{catenaTodayPendingExpenseCount}</Text>
               <Text style={[getBranchStyles(branchId).label, { color: '#e53935' }]}>Pending Expense</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[getBranchStyles(branchId).card, { backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1 }]} onPress={() => router.push('/catena-cafe-zomato-report')}>

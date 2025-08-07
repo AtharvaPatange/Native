@@ -98,6 +98,7 @@ export default function CatenaCafeZomatoReport() {
                 <th>Amount (₹)</th>
                 <th>Payment Mode</th>
                 <th>Shift</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +108,7 @@ export default function CatenaCafeZomatoReport() {
                   <td>₹${bill.amount}</td>
                   <td>${bill.paymentMode}</td>
                   <td>${bill.shift}</td>
+                  <td>${bill.status || 'Pending'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -213,6 +215,7 @@ export default function CatenaCafeZomatoReport() {
                 <Text style={styles.billAmount}>₹{bill.amount}</Text>
                 <Text style={styles.billPaymentMode}>{bill.paymentMode}</Text>
               </View>
+              <Text style={styles.billStatus}>Status: {bill.status || 'Pending'}</Text>
             </View>
           ))
         )}
@@ -407,9 +410,14 @@ const styles = StyleSheet.create({
     color: '#666',
     textTransform: 'capitalize',
   },
+  billStatus: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 4,
+  },
   downloadBtn: {
     backgroundColor: PRIMARY_GREEN,
     borderRadius: 8,
     marginBottom: 20,
   },
-}); 
+});

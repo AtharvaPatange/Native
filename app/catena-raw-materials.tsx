@@ -117,6 +117,14 @@ export default function CatenaRawMaterials() {
                       Day Total: ₹{calculateTotalAmount(entry.items || []).toLocaleString()}
                     </Text>
                   </View>
+                  <View style={styles.paymentRow}>
+                    <MaterialCommunityIcons name="cash" size={20} color={DARK_GREEN} />
+                    <Text style={styles.paymentText}>Payment Mode: {entry.paymentMode || 'Not specified'}</Text>
+                  </View>
+                  <View style={styles.statusRow}>
+                    <MaterialCommunityIcons name="check-circle" size={20} color={DARK_GREEN} />
+                    <Text style={styles.statusText}>Status: {entry.status || 'Pending'}</Text>
+                  </View>
                 </Card.Content>
               </Card>
             ))}
@@ -292,4 +300,24 @@ const styles = StyleSheet.create({
     color: DARK_GREEN,
     marginLeft: 8,
   },
-}); 
+  paymentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  paymentText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#333',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  statusText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#333',
+  },
+});

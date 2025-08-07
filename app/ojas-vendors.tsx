@@ -2,7 +2,7 @@ import { db } from '@/constants/firebaseConfig';
 import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Text } from 'react-native-paper';
@@ -176,6 +176,7 @@ function VendorTable({ data }: { data: any[] }) {
             <Text style={[styles.tableHeaderCell, { minWidth: 150 }]}>Description</Text>
             <Text style={[styles.tableHeaderCell, { minWidth: 80 }]}>Room</Text>
             <Text style={[styles.tableHeaderCell, { minWidth: 100 }]}>Date</Text>
+            <Text style={[styles.tableHeaderCell, { minWidth: 80 }]}>Delete</Text>
           </View>
           {data.length === 0 && <Text style={{ color: '#888', marginVertical: 8, paddingHorizontal: 16 }}>No maintenance vendors found.</Text>}
           {data.map((v, i) => (
@@ -187,6 +188,7 @@ function VendorTable({ data }: { data: any[] }) {
               <Text style={[styles.tableCell, { minWidth: 150 }]}>{v.desc}</Text>
               <Text style={[styles.tableCell, { minWidth: 80 }]}>{v.room}</Text>
               <Text style={[styles.tableCell, { minWidth: 100 }]}>{v.createdAt && v.createdAt.toDate ? v.createdAt.toDate().toLocaleDateString() : ''}</Text>
+              <Button mode="outlined" onPress={async () => { if (v.id) { await deleteDoc(doc(db, 'ojasmaintenance', v.id)); } }}>Delete</Button>
             </View>
           ))}
         </View>
@@ -201,12 +203,14 @@ function CommonVendorTable({ data }: { data: any[] }) {
       <View style={styles.tableHeader}>
         <Text style={styles.tableHeaderCell}>Name</Text>
         <Text style={styles.tableHeaderCell}>Phone</Text>
+        <Text style={styles.tableHeaderCell}>Delete</Text>
       </View>
       {data.length === 0 && <Text style={{ color: '#888', marginVertical: 8 }}>No common vendors found.</Text>}
       {data.map((v, i) => (
         <View key={i} style={styles.tableRow}>
           <Text style={styles.tableCell}>{v.name}</Text>
           <Text style={styles.tableCell}>{v.contact}</Text>
+          <Button mode="outlined" onPress={async () => { if (v.id) { await deleteDoc(doc(db, 'ojasvendors', v.id)); } }}>Delete</Button>
         </View>
       ))}
     </View>

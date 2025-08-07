@@ -1,11 +1,12 @@
 import { useAuth } from '@/components/AuthContext';
 import HotelDashboard from '@/components/HotelDashboard';
 import { db } from '@/constants/firebaseConfig';
+import { useUserStore } from '../zustand';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
@@ -14,7 +15,17 @@ const PRIMARY_COLOR = '#e0a86b';
 const SECONDARY_COLOR = '#e2af7a';
 
 export default function HotelOrientEliteScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
+  const workSection = useUserStore((state) => state.workSection);
+  if (userRole !== 'globalAdmin' && workSection !== 'orientElite') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <MaterialCommunityIcons name="lock" size={80} color="#ccc" />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111', marginTop: 16 }}>Access Restricted</Text>
+        <Text style={{ color: '#111', marginTop: 8 }}>You do not have permission to view this section.</Text>
+      </View>
+    );
+  }
   const [modalVisible, setModalVisible] = useState(false);
   
   // Fetch vendors for dropdown
@@ -286,6 +297,13 @@ export default function HotelOrientEliteScreen() {
               <TextInput placeholder="Vendor Name" value={vendorName} onChangeText={setVendorName} style={styles.inputNew} placeholderTextColor="#888" />
               <TextInput placeholder="Contact Number" value={vendorContact} onChangeText={setVendorContact} keyboardType="phone-pad" style={styles.inputNew} placeholderTextColor="#888" />
               <Button mode="contained" onPress={handleAddVendor} style={styles.saveBtnNew} labelStyle={styles.saveBtnLabel}>Save Vendor</Button>
+              {vendors.map((vendor) => (
+                <View key={vendor.id} style={styles.vendorRow}>
+                  <Text style={styles.vendorNameText}>{vendor.name}</Text>
+                  <Text style={styles.vendorContactText}>{vendor.contact}</Text>
+                  <Button mode="outlined" onPress={async () => { if (vendor.id) { await deleteDoc(doc(db, 'vendors', vendor.id)); setVendors(vendors.filter(v => v.id !== vendor.id)); } }}>Delete</Button>
+                </View>
+              ))}
               {/* 4. Maintenance */}
               <Text style={styles.sectionTitleNew}>Maintenance</Text>
               <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.inputNew} placeholderTextColor="#888" />
@@ -701,5 +719,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#222',
     marginLeft: 12,
+  },
+  vendorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    minHeight: 56,
+  },
+  vendorNameText: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: 'bold',
+  },
+  vendorContactText: {
+    fontSize: 14,
+    color: '#555',
   },
 }); 

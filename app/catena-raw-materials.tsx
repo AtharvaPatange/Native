@@ -213,143 +213,89 @@ export default function CatenaRawMaterials() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Smaller Header */}
-        <View style={styles.headerContainer}>
-          <MaterialCommunityIcons name="shopping" size={24} color={DARK_GREEN} />
-          <Text style={styles.header}>Raw Materials</Text>
-        </View>
-        
-        {/* Date Range Selection */}
-        <View style={styles.dateSelectionContainer}>
-          <View style={styles.dateRow}>
-            <TouchableOpacity 
-              style={styles.dateButton} 
-              onPress={() => setShowStartPicker(true)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.dateButtonContent}>
-                <MaterialCommunityIcons name="calendar-start" size={16} color={DARK_GREEN} />
-                <View style={styles.dateTextContainer}>
-                  <Text style={styles.dateLabel}>Start Date</Text>
-                  <Text style={styles.dateValue}>{startDate ? startDate.toLocaleDateString() : 'Select'}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.dateButton} 
-              onPress={() => setShowEndPicker(true)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.dateButtonContent}>
-                <MaterialCommunityIcons name="calendar-end" size={16} color={DARK_GREEN} />
-                <View style={styles.dateTextContainer}>
-                  <Text style={styles.dateLabel}>End Date</Text>
-                  <Text style={styles.dateValue}>{endDate ? endDate.toLocaleDateString() : 'Select'}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <MaterialCommunityIcons name="loading" size={48} color={PRIMARY_GREEN} />
-              <Text style={styles.loadingText}>Loading raw materials data...</Text>
-            </View>
-          ) : filteredData.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <MaterialCommunityIcons name="package-variant" size={64} color={PRIMARY_GREEN} />
-              <Text style={styles.emptyText}>No raw materials data found</Text>
-              <Text style={styles.emptySubText}>Purchase records will appear here</Text>
-            </View>
-          ) : (
-            <>
-              {filteredData.map((entry, index) => (
-                <Card key={entry.id} style={[styles.card, index === 0 && styles.firstCard]}>
-                  <Card.Title 
-                    title={formatDate(entry.date)}
-                    titleStyle={styles.cardTitle}
-                    left={(props) => (
-                      <MaterialCommunityIcons 
-                        {...props} 
-                        name="calendar-check" 
-                        size={24} 
-                        color={DARK_GREEN} 
-                      />
-                    )}
-                  />
-                  <Card.Content style={styles.cardContent}>
-                    {entry.items?.map((item, idx) => (
-                      <View key={idx} style={styles.itemRow}>
-                        <View style={styles.itemInfo}>
-                          <MaterialCommunityIcons name="package-variant" size={16} color={PRIMARY_GREEN} />
-                          <Text style={styles.itemName}>{item.name}</Text>
-                        </View>
-                        <Text style={styles.itemAmount}>₹{item.amount?.toLocaleString()}</Text>
-                      </View>
-                    ))}
-                    <View style={styles.totalRow}>
-                      <MaterialCommunityIcons name="currency-inr" size={20} color={DARK_GREEN} />
-                      <Text style={styles.dayTotal}>
-                        Day Total: ₹{calculateTotalAmount(entry.items || []).toLocaleString()}
-                      </Text>
-                    </View>
-                  </Card.Content>
-                </Card>
-              ))}
-            </>
-          )}
-        </ScrollView>
-        
-        {/* Download Report Button */}
-        {filteredData.length > 0 && (
-          <View style={styles.downloadContainer}>
-            <Button 
-              mode="contained" 
-              onPress={downloadReport}
-              style={styles.downloadButton}
-              labelStyle={styles.downloadButtonLabel}
-              icon="download"
-            >
-              Download Report
-            </Button>
-          </View>
-        )}
+    <View style={styles.container}>
+      <View style={styles.headerContainer}>
+        <MaterialCommunityIcons name="shopping" size={32} color={DARK_GREEN} />
+        <Text style={styles.header}>Catena Cafe Raw Materials</Text>
+        <Text style={styles.subHeader}>Purchase Records & Inventory</Text>
       </View>
       
-      {/* Date Pickers */}
-      {showStartPicker && (
-        <DateTimePicker
-          value={startDate || new Date()}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
-            setShowStartPicker(false);
-            if (selectedDate) {
-              setStartDate(selectedDate);
-            }
-          }}
-        />
-      )}
-      
-      {showEndPicker && (
-        <DateTimePicker
-          value={endDate || new Date()}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={(event, selectedDate) => {
-            setShowEndPicker(false);
-            if (selectedDate) {
-              setEndDate(selectedDate);
-            }
-          }}
-        />
-      )}
-    </SafeAreaView>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <MaterialCommunityIcons name="loading" size={48} color={PRIMARY_GREEN} />
+            <Text style={styles.loadingText}>Loading raw materials data...</Text>
+          </View>
+        ) : data.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <MaterialCommunityIcons name="package-variant" size={64} color={PRIMARY_GREEN} />
+            <Text style={styles.emptyText}>No raw materials data found</Text>
+            <Text style={styles.emptySubText}>Purchase records will appear here</Text>
+          </View>
+        ) : (
+          <>
+            {/* <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Summary</Text>
+              <View style={styles.summaryRow}>
+                <View style={styles.summaryItem}>
+                  <MaterialCommunityIcons name="calendar" size={24} color={DARK_GREEN} />
+                  <Text style={styles.summaryLabel}>Total Days</Text>
+                  <Text style={styles.summaryValue}>{data.length}</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <MaterialCommunityIcons name="package-variant" size={24} color={DARK_GREEN} />
+                  <Text style={styles.summaryLabel}>Total Items</Text>
+                  <Text style={styles.summaryValue}>
+                    {data.reduce((sum, entry) => sum + (entry.items?.length || 0), 0)}
+                  </Text>
+                </View>
+                <View style={styles.summaryItem}>
+                  <MaterialCommunityIcons name="currency-inr" size={24} color={DARK_GREEN} />
+                  <Text style={styles.summaryLabel}>Total Amount</Text>
+                  <Text style={styles.summaryValue}>
+                    ₹{data.reduce((sum, entry) => sum + calculateTotalAmount(entry.items || []), 0).toLocaleString()}
+                  </Text>
+                </View>
+              </View>
+            </View> */}
+
+            {data.map((entry, index) => (
+              <Card key={entry.id} style={[styles.card, index === 0 && styles.firstCard]}>
+                <Card.Title 
+                  title={formatDate(entry.date)}
+                  titleStyle={styles.cardTitle}
+                  left={(props) => (
+                    <MaterialCommunityIcons 
+                      {...props} 
+                      name="calendar-check" 
+                      size={24} 
+                      color={DARK_GREEN} 
+                    />
+                  )}
+                />
+                <Card.Content style={styles.cardContent}>
+                  {entry.items?.map((item, idx) => (
+                    <View key={idx} style={styles.itemRow}>
+                      <View style={styles.itemInfo}>
+                        <MaterialCommunityIcons name="package-variant" size={16} color={PRIMARY_GREEN} />
+                        <Text style={styles.itemName}>{item.name}</Text>
+                      </View>
+                      <Text style={styles.itemAmount}>₹{item.amount?.toLocaleString()}</Text>
+                    </View>
+                  ))}
+                  <View style={styles.totalRow}>
+                    <MaterialCommunityIcons name="currency-inr" size={20} color={DARK_GREEN} />
+                    <Text style={styles.dayTotal}>
+                      Day Total: ₹{calculateTotalAmount(entry.items || []).toLocaleString()}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </Card>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -515,29 +461,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: DARK_GREEN,
     marginLeft: 8,
-  },
-  downloadContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  downloadButton: {
-    backgroundColor: DARK_GREEN,
-    borderRadius: 8,
-    paddingVertical: 8,
-  },
-  downloadButtonLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 }); 

@@ -1,6 +1,7 @@
 import { useAuth } from '@/components/AuthContext';
 import HotelDashboard from '@/components/HotelDashboard';
 import { db } from '@/constants/firebaseConfig';
+import { useUserStore } from '../zustand';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
@@ -10,11 +11,22 @@ import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 're
 import { Appbar, Button, Text, TextInput } from 'react-native-paper';
 
 export default function HotelOjasScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
+  const workSection = useUserStore((state) => state.workSection);
+  if (userRole !== 'globalAdmin' && workSection !== 'ojas') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <MaterialCommunityIcons name="lock" size={80} color="#ccc" />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111', marginTop: 16 }}>Access Restricted</Text>
+        <Text style={{ color: '#111', marginTop: 8 }}>You do not have permission to view this section.</Text>
+      </View>
+    );
+  }
   const [modalVisible, setModalVisible] = useState(false);
   
   // Fetch unique vendor names from ojasvendorpayments collection
   useEffect(() => {
+    
     const fetchVendorNames = async () => {
       try {
         const paymentsQuery = query(collection(db, 'ojasvendorpayments'));

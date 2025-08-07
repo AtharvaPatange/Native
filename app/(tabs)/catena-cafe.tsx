@@ -4,17 +4,29 @@ import { db } from '@/constants/firebaseConfig';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { addDoc, collection, getDocs, query } from 'firebase/firestore';
+import { addDoc, collection, getDocs, query, writeBatch, deleteDoc, doc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Appbar, Button, Text, TextInput } from 'react-native-paper';
+import { useUserStore } from '../zustand';
 
 export default function CatenaCafeScreen() {
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
   const [modalVisible, setModalVisible] = useState(false);
+  const workSection = useUserStore((state) => state.workSection);
+  if (userRole !== 'globalAdmin' && workSection !== 'catenaCafe') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+        <MaterialCommunityIcons name="lock" size={80} color="#ccc" />
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#111', marginTop: 16 }}>Access Restricted</Text>
+        <Text style={{ color: '#111', marginTop: 8 }}>You do not have permission to view this section.</Text>
+      </View>
+    );
+  }
   
   // Fetch unique vendor names from catenacafevendorpayments collection
   useEffect(() => {
+  
     const fetchVendorNames = async () => {
       try {
         const paymentsQuery = query(collection(db, 'catenacafevendorpayments'));
@@ -83,7 +95,7 @@ export default function CatenaCafeScreen() {
   // Raw materials purchasing state
   const [rawDate, setRawDate] = useState<Date | null>(null);
   const [showRawDatePicker, setShowRawDatePicker] = useState(false);
-  const [rawItems, setRawItems] = useState([{ name: '', amount: '' }]);
+  const [rawItems, setRawItems] = useState([{ name: '', amount: '', paymentMode: 'cash', status: 'pending' }]);
 
   // Zomato bill state
   const [zomatoAmount, setZomatoAmount] = useState('');
@@ -210,8 +222,8 @@ export default function CatenaCafeScreen() {
     }
   };
 
-  const handleAddRawItem = () => setRawItems([...rawItems, { name: '', amount: '' }]);
-  const handleRawItemChange = (idx: number, field: 'name' | 'amount', value: string) => {
+  const handleAddRawItem = () => setRawItems([...rawItems, { name: '', amount: '', paymentMode: 'cash', status: 'pending' }]);
+  const handleRawItemChange = (idx: number, field: 'name' | 'amount' | 'paymentMode' | 'status', value: string) => {
     setRawItems(items => items.map((item, i) => i === idx ? { ...item, [field]: value } : item));
   };
   const handleSaveRawPurchases = async () => {
@@ -221,12 +233,21 @@ export default function CatenaCafeScreen() {
     }
     await addDoc(collection(db, 'catenaRawPurchases'), {
       date: rawDate.toISOString().split('T')[0],
-      items: rawItems.map(item => ({ name: item.name, amount: Number(item.amount) })),
+      items: rawItems,
+      createdAt: new Date(),
+      createdBy: user?.email || 'guest',
+    });
+    // Add total to daily expense
+    const totalAmount = rawItems.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    await addDoc(collection(db, 'catenacafeexpense'), {
+      cash: totalAmount,
+      type: 'raw-material',
+      status: 'done',
       createdAt: new Date(),
       createdBy: user?.email || 'guest',
     });
     setRawDate(null);
-    setRawItems([{ name: '', amount: '' }]);
+    setRawItems([{ name: '', amount: '', paymentMode: 'cash', status: 'pending' }]);
     Alert.alert('Success', 'Raw material purchases added!');
   };
 
@@ -328,6 +349,13 @@ export default function CatenaCafeScreen() {
             <TextInput placeholder="Vendor Name" value={vendorName} onChangeText={setVendorName} style={styles.input} />
             <TextInput placeholder="Contact Number" value={vendorContact} onChangeText={setVendorContact} keyboardType="phone-pad" style={styles.input} />
             <Button mode="contained" onPress={handleAddVendor} style={styles.saveBtn}>Save Vendor</Button>
+            {vendors.map((vendor, index) => (
+              <View key={vendor.id} style={styles.vendorItem}>
+                <Text style={styles.vendorName}>{vendor.name}</Text>
+                <Text style={styles.vendorContact}>{vendor.contact}</Text>
+                <Button mode="outlined" onPress={async () => { await deleteDoc(doc(db, 'catenacafevendors', vendor.id)); setVendors(vendors.filter(v => v.id !== vendor.id)); }}>Delete</Button>
+              </View>
+            ))}
             {/* 4. Maintenance */}
             <Text style={styles.sectionTitle}>Maintenance</Text>
             <TextInput placeholder="Description" value={maintDesc} onChangeText={setMaintDesc} style={styles.input} />
@@ -598,6 +626,14 @@ export default function CatenaCafeScreen() {
                   keyboardType="numeric"
                   style={[styles.input, { flex: 1 }]}
                 />
+                <Picker selectedValue={item.paymentMode} onValueChange={v => handleRawItemChange(idx, 'paymentMode', v)} style={styles.picker}>
+                  <Picker.Item label="Cash" value="cash" />
+                  <Picker.Item label="Online" value="online" />
+                </Picker>
+                <Picker selectedValue={item.status} onValueChange={v => handleRawItemChange(idx, 'status', v)} style={styles.picker}>
+                  <Picker.Item label="Pending" value="pending" />
+                  <Picker.Item label="Done" value="done" />
+                </Picker>
               </View>
             ))}
             <Button mode="outlined" onPress={handleAddRawItem} style={{ marginBottom: 8 }}>Add Item</Button>
@@ -900,5 +936,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     letterSpacing: 0.5,
+  },
+  vendorItem: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  vendorName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#222',
+    marginBottom: 4,
+  },
+  vendorContact: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 8,
   },
 }); 
